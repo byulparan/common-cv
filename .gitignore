@@ -1,0 +1,5 @@
+libopencv_wrap
+libcvblob_wrap
+.DS_Store
+*.o
+
