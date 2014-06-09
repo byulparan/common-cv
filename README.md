@@ -10,8 +10,8 @@
   - [CvBlob](https://code.google.com/p/cvblob/) - optional
   - [Quicklisp](http://www.quicklisp.org)
   - [Simple-Utils](https://github.com/byulparan/simple-utils)
-  - [MainThread](http://github.com/byulparan/main-thread) - only MacOSX
-  - [ClozureCL](http://www.clozure.com/clozurecl.html) or [ECL](http://ecls.sourceforge.net)
+  - [ClozureCL](http://www.clozure.com/clozurecl.html) or [ECL](http://ecls.sourceforge.net) or
+  [SBCL](http://www.sbcl.org)
   
 
 #### Installation:

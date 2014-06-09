@@ -22,6 +22,7 @@
   `(bt:interrupt-thread
    #+ccl ccl::*initial-process*
    #+sbcl (sb-thread:main-thread)
+   #+ecl (find 'si:top-level (bt:all-threads) :key #'mp:process-name)
    (lambda ()
      (with-masked-float-traps
        ,@body)))
