@@ -468,6 +468,33 @@
 		     (return))))
 	      (cv:release-mem-storage mem-storage))))))))
 
+(defun detect-circles (&optional (cam -1))
+  (with-call-gui-thread
+    (let* ((mem-storage (cv:create-mem-storage)))
+      (cv:with-named-window ("detect-circles")
+	(cv:with-captured-camera (vid cam :width 640 :height 480)
+	  (let ((frame (cv:query-frame vid)))
+	    (cv:with-ipl-image ((src (cv:size (cv:width frame) (cv:height frame)) :ipl-depth-8u 1)
+				(result (cv:size (cv:width frame) (cv:height frame)) :ipl-depth-8u 3))
+	      (loop
+		 (cv:cvt-color (cv:query-frame vid) src :cv-bgr-2-gray)
+		 (cv:copy (cv:query-frame vid) result)
+		 (loop with circles = (cv:hough-circles src mem-storage 1.5 50 :min-radius 20 :max-radius 130)
+		    repeat (cv:total circles)
+		    for (x y radius) = (cffi:with-foreign-object (native-record :float 3)
+					 (cv:seq-pop-front circles native-record)
+					 (list (cffi:mem-aref native-record :float 0)
+					       (cffi:mem-aref native-record :float 1)
+					       (cffi:mem-aref native-record :float 2))) do
+		      (cv:circle result (cv:point x y)
+			       radius
+			       (cv:scalar 0 0 255) 1))
+		 (cv:show-image "detect-circles" result)
+		 (let ((c (cv:wait-key 33)))
+		   (when (= c 27)
+		     (return))))
+	      (cv:release-mem-storage mem-storage))))))))
+
 ;;; cvblob
 (ql:quickload :cvblob)
 

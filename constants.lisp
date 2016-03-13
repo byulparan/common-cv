@@ -381,7 +381,8 @@
   (:cv-haar-find-biggest-object 4)
   (:cv-haar-do-rough-search 8))
 
-(cffi:defcenum :hough-line-enum
+(cffi:defcenum :hough-enum
   (:cv-hough-standard 0)
   (:cv-hough-probabalistic 1)
-  (:cv-hough-multi-scale 2))
+  (:cv-hough-multi-scale 2)
+  (:cv-hough-gradient 3))
