@@ -632,4 +632,10 @@
   (cffi:foreign-funcall "cvEqualizeHist" :pointer (ref src) :pointer (ref dst)))
 
 
-
+(define-method hough-lines ((image cv-arr) (lines cv-mem-storage) (rho number) (theta number) (threshold number) &optional (method :cv-hough-standard) (param1 0.0d0) (param2 0.0d0))
+  (make-instance 'cv-seq
+		 :ref (cffi:foreign-funcall "cvHoughLines2" :pointer (ref image) :pointer (ref lines)
+					    :int (cffi:foreign-enum-value :hough-line-enum method)
+					    :double (* 1.0d0 rho) :double (* 1.0d0 theta) :int (floor threshold)
+					    :double (* 1.0d0 param1) :double (* 1.0d0 param2)
+					    :pointer)))

@@ -380,3 +380,8 @@
   (:cv-haar-scale-image 2)
   (:cv-haar-find-biggest-object 4)
   (:cv-haar-do-rough-search 8))
+
+(cffi:defcenum :hough-line-enum
+  (:cv-hough-standard 0)
+  (:cv-hough-probabalistic 1)
+  (:cv-hough-multi-scale 2))
