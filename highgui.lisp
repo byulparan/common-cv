@@ -67,7 +67,10 @@
 
 (defmethod query-frame ((capture cv-capture))
   (let ((ref (cffi:foreign-funcall "cvQueryFrame" :pointer (ref capture) :pointer)))
-    (reset-info-ipl-image (make-instance 'ipl-image :ref ref) )))
+    (when (cffi-sys:null-pointer-p ref)
+      (set-capture-property capture :cv-cap-prop-pos-frame 1)
+      (setf ref (cffi:foreign-funcall "cvQueryFrame" :pointer (ref capture) :pointer)))
+    (reset-info-ipl-image (make-instance 'ipl-image :ref ref))))
 
 (defmacro with-captured-camera ((name dev-index &key width height) &body body)
   `(let ((,name (create-camera-capture ,dev-index)))
