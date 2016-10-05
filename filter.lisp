@@ -632,4 +632,19 @@
   (cffi:foreign-funcall "cvEqualizeHist" :pointer (ref src) :pointer (ref dst)))
 
 
+(define-method hough-lines ((image cv-arr) (lines cv-mem-storage) (rho number) (theta number) (threshold number) &key (method :cv-hough-standard) (param1 0.0d0) (param2 0.0d0))
+  (make-instance 'cv-seq
+		 :ref (cffi:foreign-funcall "cvHoughLines2" :pointer (ref image) :pointer (ref lines)
+					    :int (cffi:foreign-enum-value :hough-enum method)
+					    :double (* 1.0d0 rho) :double (* 1.0d0 theta) :int (floor threshold)
+					    :double (* 1.0d0 param1) :double (* 1.0d0 param2)
+					    :pointer)))
 
+(define-method hough-circles ((image cv-arr) (circles cv-mem-storage) (dp number) (min-dist number) &key (method :cv-hough-gradient) (param1 100.0d0) (param2 100.0d0) (min-radius 0) (max-radius 0))
+  (make-instance 'cv-seq
+		 :ref (cffi:foreign-funcall "cvHoughCircles" :pointer (ref image) :pointer (ref circles)
+					    :int (cffi:foreign-enum-value :hough-enum method)
+					    :double (* 1.0d0 dp) :double (* 1.0d0 min-dist)
+					    :double (* 1.0d0 param1) :double (* 1.0d0 param2)
+					    :int (floor min-radius) :int (floor max-radius)
+					    :pointer)))

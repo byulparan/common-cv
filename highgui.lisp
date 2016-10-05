@@ -146,7 +146,7 @@
 			      :pointer native-pt2 :pointer  native-color
 			      :int (floor thickness) :int (floor line-type) :int (floor shift))))))
 
-(define-method cirlce ((array cv-arr) (center cv-point) (radius number) (color cv-scalar)
+(define-method circle ((array cv-arr) (center cv-point) (radius number) (color cv-scalar)
 			  &optional (thickness 1) (line-type 8) (shift 0))
   (with-cv-point (native-center center)
     (with-cv-scalar (native-color color)

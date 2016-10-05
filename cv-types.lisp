@@ -574,6 +574,12 @@
     (cffi:with-foreign-slots ((x y) native-point (:struct CvPoint))
       (point x y))))
 
+(define-method pop-seq-point-2d-32f ((seq cv-seq))
+  (cffi:with-foreign-object (native-point '(:struct CvPoint2D32f))
+    (unless (zerop (total seq))
+      (seq-pop-front seq native-point))
+    (cffi:with-foreign-slots ((x y) native-point (:struct CvPoint2D32f))
+      (point-2d-32f x y))))
 
 (define-method seq-elem-idx ((seq cv-seq) element)
   (cffi:foreign-funcall "cvSeqElemIdx" :pointer (ref seq)
