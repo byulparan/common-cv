@@ -1,4 +1,3 @@
-
 (in-package #:cv)
 
 (define-method abs-diff ((src1 cv-arr) (src2 cv-arr) (dst cv-arr))
