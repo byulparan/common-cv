@@ -1,135 +1,172 @@
-
 (in-package #:cv)
 
-(cffi:defcstruct CvPoint
+;;; CvPoint
+(cffi:defcstruct (CvPoint :class %CvPoint)
   (x :int)
   (y :int))
 
-(defclass cv-point ()
-  ((x :initarg :x :accessor x)
-   (y :initarg :y :accessor y)))
+(defstruct (point
+	    (:constructor point (x y)))
+  x y)
 
-(defun point (x y)
-  (make-instance 'cv-point :x (floor x)
-			   :y (floor y)))
+(defmethod cffi:translate-from-foreign (p (type %CvPoint))
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint))
+    (point x y)))
+
+(defmethod cffi:translate-into-foreign-memory (point (type %CvPoint) p)
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint))
+    (setf x (point-x point)
+	  y (point-y point))))
 
 
-(cffi:defcstruct CvPoint2D32f
+;;; CvPoint2D32f
+(cffi:defcstruct (CvPoint2D32f :class %CvPoint2D32f)
   (x :float)
   (y :float))
 
-(defclass cv-point-2d-32f ()
-  ((x :initarg :x :accessor x)
-   (y :initarg :y :accessor y)))
+(defstruct (point-2d32f
+	    (:constructor point-2d32f (x y)))
+  x y)
 
-(defun point-2d-32f (x y)
-  (make-instance 'cv-point-2d-32f :x (coerce x 'single-float)
-				  :y (coerce y 'single-float)))
+(defmethod cffi:translate-from-foreign (p (type %CvPoint2D32f))
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint2D32f))
+    (point-2d32f x y)))
 
-(cffi:defcstruct CvPoint2D64f
+(defmethod cffi:translate-into-foreign-memory (point (type %CvPoint2D32f) p)
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint2D32f))
+    (setf x (point-2d32f-x point)
+	  y (point-2d32f-y point))))
+
+
+;;; CvPoint2D64f
+(cffi:defcstruct (CvPoint2D64f :class %CvPoint2D64f)
   (x :double)
   (y :double))
 
-(defclass cv-point-2d-64f ()
-  ((x :initarg :x :accessor x)
-   (y :initarg :y :accessor y)))
+(defstruct (point-2d64f
+	    (:constructor point-2d64f (x y)))
+  x y)
 
-(defun point-2d-64f (x y)
-  (make-instance 'cv-point-2d-64f :x (* 1.0d0 x)
-				  :y (* 1.0d0 y)))
+(defmethod cffi:translate-from-foreign (p (type %CvPoint2D64f))
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint2D64f))
+    (point-2d64f x y)))
+
+(defmethod cffi:translate-into-foreign-memory (point (type %CvPoint2D64f) p)
+  (cffi:with-foreign-slots ((x y) p (:struct CvPoint2D64f))
+    (setf x (point-2d64f-x point)
+	  y (point-2d64f-y point))))
 
 
-;;; Size
-(cffi:defcstruct CvSize
+;;; CvSize
+(cffi:defcstruct (CvSize :class %CvSize)
   (width :int)
   (height :int))
 
-(defclass cv-size ()
-  ((width :initarg :width :accessor width)
-   (height :initarg :height :accessor height)))
+(defstruct (size
+	    (:constructor size (width height)))
+  width
+  height)
 
-(defun size (width height)
-  (make-instance 'cv-size :width (floor width)
-			  :height (floor height)))
+(defmethod cffi:translate-from-foreign (p (type %CvSize))
+  (cffi:with-foreign-slots ((width height) p (:struct CvSize))
+    (size width height)))
+
+(defmethod cffi:translate-into-foreign-memory (size (type %CvSize) p)
+  (cffi:with-foreign-slots ((width height) p (:struct CvSize))
+    (setf width  (size-width size)
+	  height (size-height size))))
 
 
-(cffi:defcstruct CvSize2D32f
+;;; CvSize2D32f 
+(cffi:defcstruct (CvSize2D32f :class %CvSize2D32f)
   (width :float)
   (height :float))
 
-(defclass cv-size-2d-32f ()
-  ((width :initarg :width :accessor width)
-   (height :initarg :height :accessor height)))
+(defstruct (size-2d32f
+	    (:constructor size-2d32f (width height)))
+  width height)
 
+(defmethod cffi:translate-from-foreign (p (type %CvSize2D32f))
+  (cffi:with-foreign-slots ((width height) p (:struct CvSize2D32f))
+    (size-2d32f width height)))
 
-(defun size-2d-32f (width height)
-  (make-instance 'cv-size :width (coerce width 'single-float)
-			  :height (coerce height 'single-float)))
+(defmethod cffi:translate-into-foreign-memory (size (type %CvSize2D32f) p)
+  (cffi:with-foreign-slots ((width height) p (:struct CvSize2D32f))
+    (setf width  (size-2d32f-width size)
+	  height (size-2d32f-height size))))
+
 
 ;;; CvBox2D
-(cffi:defcstruct CvBox2D
+(cffi:defcstruct (CvBox2D :class %CvBox2D)
   (center (:struct CvPoint2D32f))
   (size (:struct CvSize2D32f))
   (angle :float))
 
-(defclass cv-box-2d ()
-  ((box-center :initarg :box-center :accessor box-center)
-   (box-size :initarg :box-size :accessor box-size)
-   (box-angle :initarg :box-angle :accessor box-angle)))
+(defstruct (box-2d
+	    (:constructor box-2d (center size angle)))
+  center size angle)
 
+(defmethod cffi:translate-from-foreign (p (type %CvBox2D))
+  (cffi:with-foreign-slots ((center size angle) p (:struct CvBox2D))
+    (box-2d center size angle)))
 
-(defun box-2d (x y width height angle)
-  (make-instance 'cv-box-2d :box-center (point-2d-32f x y)
-			    :box-size (size-2d-32f width height)
-			    :box-angle (float angle)))
+(defmethod cffi:translate-into-foreign-memory (box-2d (type %CvBox2D) p)
+  (cffi:with-foreign-slots ((center size angle) p (:struct CvBox2D))
+    (setf center  (box-2d-center box-2d)
+	  size (box-2d-size box-2d)
+	  angle (box-2d-angle box-2d))))
 
-
-
-
-;;; cv-rect
-(cffi:defcstruct CvRect
+;;; CvRect
+(cffi:defcstruct (CvRect :class %CvRect)
   (x :int)
   (y :int)
   (width :int)
   (height :int))
 
-(defclass cv-rect ()
-  ((x :initarg :x :accessor x)
-   (y :initarg :y :accessor y)
-   (width :initarg :width :accessor width)
-   (height :initarg :height :accessor height)))
-
-(defun rect (x y width height)
-  (make-instance 'cv-rect :x (floor x)
-			  :y (floor y)
-			  :width (floor width)
-			  :height (floor height)))
+(defstruct (rect
+	    (:constructor rect (x y width height)))
+  x y width height)
 
 
+(defmethod cffi:translate-from-foreign (p (type %CvRect))
+  (cffi:with-foreign-slots ((x y widht height) p (:struct CvRect))
+    (rect x y width height)))
 
-;;; cv-scalar
-(cffi:defcstruct CvScalar
+(defmethod cffi:translate-into-foreign-memory (rect (type %CvRect) p)
+  (cffi:with-foreign-slots ((x y width height) p (:struct CvRect))
+    (setf x (rect-x rect)
+	  y (rect-y rect)
+	  width (rect-width rect)
+	  height (rect-height rect))))
+
+;;; CvScalar
+(cffi:defcstruct (CvScalar :class %CvScalar)
   (val :double :count 4))
 
-(defclass cv-scalar ()
-  ((val :initarg :val :accessor val)))
+(defstruct (scalar
+	    (:constructor scalar (val0 val1 val2 val3)))
+  val0 val1 val2 val3)
 
-(defmethod scalar ((val0 number) &optional (val1 0) (val2 0) (val3 0))
-  (make-instance 'cv-scalar :val (mapcar #!(* 1.0d0 %1) (list val0 val1 val2 val3))))
+(defmethod cffi:translate-from-foreign (p (type %CvScalar))
+  (cffi:with-foreign-slots ((val) p (:struct CvScalar))
+    (scalar (cffi:mem-aref val :double 0)
+	    (cffi:mem-aref val :double 1)
+	    (cffi:mem-aref val :double 2)
+	    (cffi:mem-aref val :double 3))))
 
-(defmethod scalar-all ((val0123 number))
-  (let ((val0123 (* 1.0d0 val0123)))
-    (make-instance 'cv-scalar :val (list val0123
-					 val0123
-					 val0123
-					 val0123))))
+(defmethod cffi:translate-into-foreign-memory (scalar (type %CvScalar) p)
+  (cffi:with-foreign-slots ((val) p (:struct CvScalar))
+    (setf (cffi:mem-aref val :double 0) (coerce (scalar-val0 scalar) 'double-float)
+	  (cffi:mem-aref val :double 1) (coerce (scalar-val1 scalar) 'double-float)
+	  (cffi:mem-aref val :double 2) (coerce (scalar-val2 scalar) 'double-float)
+	  (cffi:mem-aref val :double 3) (coerce (scalar-val3 scalar) 'double-float))))
 
-(defmethod real-scalar ((val0 number))
-  (make-instance 'cv-scalar :val (list (* 1.0d0 val0) 0 0 0)))
+(defun scalar-all (number)
+  (let ((number (coerce number 'double-float))))
+  (scalar number number number number))
 
-
-
-
+(defun real-scalar (number)
+  (scalar (coerce number 'double-float) 0.0d0 0.0d0 0.0d0))
 
 
 ;;;
