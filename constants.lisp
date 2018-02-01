@@ -1,6 +1,5 @@
 (in-package #:cv)
 
-
 ;;; HighGUI
 ;;; NamedWindow
 (cffi:defcenum :named-window-enum

@@ -179,18 +179,6 @@
   (step :int)
   (type :int))
 
-(cffi:defcfun ("cvCreateMat" create-mat) (:pointer (:struct mat))
-  (rows :int)
-  (cols :int)
-  (type :mat-type-enum))
-
-(cffi:defcfun ("cvReleaseMat" release-mat) :void
-  (ptr :pointer))
-
-(defun release-mat* (mat)
-  (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem-ref ptr :pointer) mat)
-    (release-mat ptr)))
 
 ;;; IplImage
 (cffi:defcstruct ipl-image
@@ -217,66 +205,10 @@
   (width :int)
   (width-step :int))
 
-(cffi:defcfun ("cvCreateImage" create-image) :pointer
-  (size (:struct size))
-  (depth :ipl-depth-enum)
-  (channels :int))
-
-(cffi:defcfun ("cvCreateImageHeader" create-image-header) :pointer
-  (size (:struct size))
-  (depth :ipl-depth-enum)
-  (channels :int))
-
-(cffi:defcfun ("cvReleaseImage" release-image) :void
-  (ptr :pointer))
-
-(defun release-image* (ipl)
-  (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem-ref ptr :pointer) ipl)
-    (release-image ptr)))
-
-(cffi:defcfun ("cvSetImageROI" set-image-roi) :void
-  (ipl :pointer)
-  (rect (:struct rect)))
-
-(cffi:defcfun ("cvResetImageROI" reset-image-roi) :void
-  (ipl :pointer))
 
 
 ;;;
 ;;; 
-(cffi:defcfun ("cvGet1D" get-1d) (:struct scalar)
-  (arr :pointer)
-  (idx0 :int))
-
-(cffi:defcfun ("cvGet2D" get-2d) (:struct scalar)
-  (arr :pointer)
-  (idx0 :int)
-  (idx1 :int))
-
-(cffi:defcfun ("cvGet3D" get-3d) (:struct scalar)
-  (arr :pointer)
-  (idx0 :int)
-  (idx1 :int)
-  (idx2 :int))
-
-(cffi:defcfun ("cvSet1D" set-1d) :void
-  (arr :pointer)
-  (idx0 :int)
-  (value (:struct scalar)))
-
-(cffi:defcfun ("cvSet2D" set-2d) :void
-  (arr :pointer)
-  (idx0 :int)
-  (idx1 :int)
-  (value (:struct scalar)))
-
-(cffi:defcfun ("cvSet3D" set-3d) :void
-  (arr :pointer)
-  (idx0 :int)
-  (idx1 :int)
-  (idx2 :int)
-  (value (:struct scalar)))
 
 ;; 
 ;; IPL-CONV-KERNEL
@@ -288,86 +220,14 @@
   (n-shift-r :int)
   (values :pointer))
 
-(cffi:defcfun ("cvCreateStructuringElementEx" create-structuring-element-ex)
-    (:pointer (:struct ipl-conv-kernel))
-  (cols :int)
-  (rows :int)
-  (anchor-x :int)
-  (anchor-y :int)
-  (shape :int)
-  (values :pointer))
 
-(cffi:defcfun ("cvReleaseStructuringElement" release-structuring-element) :void
-  (ptr :pointer))
-
-(defun release-structuring-element* (ipl-conv-kernel)
-  (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem-ref ptr :pointer) ipl-conv-kernel)
-    (release-structuring-element ptr)))
 
 
 ;;; Histogram
-(cffi:defcfun ("cvCreateHist" create-hist) :pointer
-  (dims :int)
-  (sizes :pointer)
-  (type :hist-enum)
-  (ranges :pointer)
-  (uniform :int))
 
-(defun create-hist* (dims sizes type &optional ranges (uniform 1))
-  (let* ((ref nil))
-    (cffi:with-foreign-objects ((native-size :int (length sizes)))
-      (dotimes (i (length sies))
-	(setf (cffi:mem-aref native-size :int i) (nth i sizes)))
-      (if ranges (cffi:with-foreign-object (ranges-pointer :pointer (length ranges))
-		   (dotimes (i (length ranges))
-		     (let ((elements (cffi:foreign-alloc :float :count (length (nth i ranges)))))
-		       (dotimes (k (length (nth i ranges)))
-			 (setf (cffi:mem-aref elements :float k) (coerce (nth k (nth i ranges)) 'single-float)))
-		       (setf (cffi:mem-aref ranges-pointer :pointer i) elements)))
-		   (setf ref (cffi:foreign-funcall "cvCreateHist"
-						   :int (floor dims)
-						   :pointer native-size
-						   :int (cffi:foreign-enum-value :hist-enum type)
-						   :pointer ranges-pointer
-						   :int (floor uniform)
-						   :pointer))
-		   (dotimes (i (length ranges))
-		     (cffi-sys:foreign-free (cffi:mem-aref ranges-pointer :pointer i))))
-	(setf ref (cffi:foreign-funcall "cvCreateHist"
-					:int (floor dims)
-					:pointer native-size
-					:int (cffi:foreign-enum-value :hist-enum type)
-					:pointer (cffi:null-pointer)
-					:int (floor uniform)
-					:pointer))))
-    ref))
 
-(cffi:defcfun ("cvClearHist" clear-hist) :void
-  (hist :pointer))
 
-(cffi:defcfun ("cvReleaseHist" release-hist) :void
-  (ptr :pointer))
 
-(defun release-hist* (hist)
-  (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem-ref ptr :pointer) hist)
-    (release-hist ptr)))
-
-;;; CvMemStorage
-(cffi:defcfun ("cvCreateMemStorage" create-mem-storage) :pointer
-  (block-size :int))
-
-(cffi:defcfun ("cvReleaseMemStorage" release-mem-storage) :void
-  (ptr :pointer))
-
-(defun release-mem-storage* (mem-storage)
-  (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem-ref ptt :pointer) mem-storage)
-    (release-mem-storage ptr)))
-
-(cffi:defcfun ("cvClearMemStorage" clear-mem-storage) :void
-  (mem-storage :pointer))
 
 
 ;;; CvSeq
@@ -387,70 +247,6 @@
   (free-blocks :pointer)
   (first :pointer))
 
-(cffi:defcfun ("cvCreateSeq" create-seq) :pointer
-  (seq-flags :int)
-  (header-size :unsigned-long)
-  (elem-size :unsigned-long)
-  (storage :pointer))
-
-(cffi:defcfun ("cvClearSeq" clear-seq) :void
-  (seq :pointer))
-
-(cffi:defcfun ("cvSeqPush" seq-push) :pointer
-  (seq :pointer)
-  (element :pointer))
-
-(cffi:defcfun ("cvSeqPushFront" seq-push-front) :pointer
-  (seq :pointer)
-  (element :pointer))
-
-(cffi:defcfun ("cvSeqPop" seq-pop) :void
-  (seq :pointer)
-  (element :pointer))
-
-(cffi:defcfun ("cvSeqPopFront" seq-pop-front) :void
-  (seq :pointer)
-  (element :pointer))
-
-(cffi:defcfun ("cvSeqPushMulti" seq-push-multi) :void
-  (seq :pointer)
-  (elements :pointer)
-  (count :int)
-  (in-front :int))
-
-(cffi:defcfun ("cvSeqPopMulti" seq-pop-multi) :void
-  (seq :pointer)
-  (elements :pointer)
-  (count :int)
-  (in-front :int))
-
-(cffi:defcfun ("cvSeqInsert" seq-insert) :pointer
-  (seq :pointer)
-  (before-index :int)
-  (element :pointer))
-
-(cffi:defcfun ("cvSeqRemove" seq-remove) :void
-  (seq :pointer)
-  (index :int))
-
-(cffi:defcfun ("cvGetSeqElem" get-seq-elem) :pointer
-  (seq :pointer)
-  (index :int))
-
-(defun get-seq-elem-rect (seq index)
-  (let* ((rect (get-seq-elem seq index)))
-    (cffi:with-foreign-slots ((x y width height) rect (:struct rect))
-      (rect x y width height))))
-
-(defun get-seq-elem-point (seq index)
-  (let* ((point (get-seq-elem seq index)))
-    (cffi:with-foreign-slots ((x y) point (:struct point))
-      (point x y))))
-
-(cffi:defcfun ("cvSeqElemIdx" seq-elem-idx) :int
-  (seq :pointer)
-  (element :pointer)
-  (block :pointer))
 
 ;; (cffi:defcfun ("cvCloneSeq" clone-seq) :pointer
 ;;   (seq :pointer)
@@ -466,22 +262,6 @@
   (block-min :pointer)
   (block-max :pointer))
 
-(cffi:defcfun ("cvStartWriteSeq" start-write-seq) :void
-  (seq-flags :int)
-  (header-size :int)
-  (elem-size :int)
-  (storage :pointer)
-  (writer :pointer))
-
-(cffi:defcfun ("cvStartAppendToSeq" start-append-to-seq) :void
-  (seq :pointer)
-  (seq-writer :pointer))
-
-(cffi:defcfun ("cvEndWriteSeq" end-write-seq) :pointer
-  (seq-writer :pointer))
-
-(cffi:defcfun ("cvFlushSeqWriter" flush-seq-writer) :void
-  (seq-writer :pointer))
 
 
 ;; (define-method write-seq-elem-point ((point cv-point) (writer cv-seq-writer))
@@ -508,18 +288,6 @@
   (delta-index :int)
   (prev-elem :pointer))
 
-(cffi:defcfun ("cvStartReadSeq" start-read-seq) :pointer
-  (seq :pointer)
-  (seq-reader :pointer)
-  (reverse :int))
-
-(cffi:defcfun ("cvGetSeqReaderPos" get-seq-reader-pos) :int
-  (seq-reader :pointer))
-
-(cffi:defcfun ("cvSetSeqReaderPos" set-seq-reader-pos) :void
-  (seq-reader :pointer)
-  (index :int)
-  (is-relative :int))
 
 ;; (define-method read-seq-elem-point ((reader cv-seq-reader))
 ;;   (cffi:with-foreign-object (native-point '(:struct CvPoint))
@@ -553,23 +321,6 @@
 	  end-index (slice-end-index slice))))
 
 
-(cffi:defcfun ("cvSeqSlice" seq-slice) :pointer
-  (seq :pointer)
-  (slice (:struct slice))
-  (storage :pointer)
-  (copy-data :int))
-
-(cffi:defcfun ("cvSeqRemoveSlice" seq-remove-slice) :void
-  (seq :pointer)
-  (slice (:struct slice)))
-
-(cffi:defcfun ("cvSeqInsertSlice" seq-insert-slice) :void
-  (seq :pointer)
-  (before-index :int)
-  (from-arr :pointer))
-
-(cffi:defcfun ("cvSeqInvert" seq-invert) :void
-  (seq :pointer))
 
 
 

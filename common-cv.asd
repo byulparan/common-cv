@@ -1,14 +1,13 @@
-
 (asdf:defsystem #:common-cv
   :serial t
   :depends-on (#:cffi-libffi)
   :components ((:file "library")
 	       (:file "package")
-	       ;;(:file "macros")
 	       (:file "constants")
 	       (:file "cv-types")
-	       (:file "filter")
+	       (:file "core")
 	       (:file "img-proc")
+	       (:file "img-codec")
 	       (:file "obj-detect")
-	       ;; (:file "highgui")
-	       ))
+	       (:file "video-io")
+	       (:file "highgui")))
