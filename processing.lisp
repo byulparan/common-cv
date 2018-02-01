@@ -1,4 +1,3 @@
-
 (in-package #:cv)
 
 ;;; histogram
@@ -159,7 +158,6 @@
 
 
 ;;; Contours Library
-
 (define-method find-contours ((image cv-arr) (storage cv-mem-storage)
 			      &optional (header-size 128) (mode :cv-retr-list) (method :cv-chain-approx-simple)
 			      (offset (point 0 0)))
