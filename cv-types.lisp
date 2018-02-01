@@ -207,9 +207,6 @@
 
 
 
-;;;
-;;; 
-
 ;; 
 ;; IPL-CONV-KERNEL
 (cffi:defcstruct ipl-conv-kernel
@@ -219,15 +216,6 @@
   (n-rows :int)
   (n-shift-r :int)
   (values :pointer))
-
-
-
-
-;;; Histogram
-
-
-
-
 
 
 ;;; CvSeq
@@ -248,11 +236,6 @@
   (first :pointer))
 
 
-;; (cffi:defcfun ("cvCloneSeq" clone-seq) :pointer
-;;   (seq :pointer)
-;;   (storage :pointer))
-
-
 ;;; CvSeqWriter
 (cffi:defcstruct seq-writer
   (header-size :int)
@@ -261,20 +244,6 @@
   (ptr :pointer)
   (block-min :pointer)
   (block-max :pointer))
-
-
-
-;; (define-method write-seq-elem-point ((point cv-point) (writer cv-seq-writer))
-;;   (with-cv-point (native-point point)
-;;     (cffi:foreign-funcall "cv_write_seq_elem_point" :pointer native-point
-;; 					      :pointer (ref writer))))
-
-;; (define-method write-seq-elem-rect ((rect cv-rect) (writer cv-seq-writer))
-;;   (cffi:with-foreign-object (native-rect '(:struct CvRect))
-;;     (cffi:with-foreign-slots ((x y width height) native-rect (:struct CvRect))
-;;       (setf x (x rect) y (y rect) width (width rect) height (height rect)))
-;;     (cffi:foreign-funcall "cv_write_seq_elem_rect" :pointer native-rect
-;; 					      :pointer (ref writer))))
 
 
 ;;; CvSeqReader
@@ -287,19 +256,6 @@
   (block-max :pointer)
   (delta-index :int)
   (prev-elem :pointer))
-
-
-;; (define-method read-seq-elem-point ((reader cv-seq-reader))
-;;   (cffi:with-foreign-object (native-point '(:struct CvPoint))
-;;     (cffi:foreign-funcall "cv_read_seq_elem_point" :pointer native-point :pointer (ref reader))
-;;     (cffi:with-foreign-slots ((x y) native-point (:struct CvPoint))
-;;       (point x y))))
-
-;; (define-method read-seq-elem-rect ((reader cv-seq-reader))
-;;   (cffi:with-foreign-object (native-rect '(:struct CvRect))
-;;     (cffi:foreign-funcall "cv_read_seq_elem_rect" :pointer native-rect :pointer (ref reader))
-;;     (cffi:with-foreign-slots ((x y width height) native-rect (:struct CvRect))
-;;       (rect x y width height))))
 
 
 ;;; CvSlice
@@ -319,8 +275,5 @@
   (cffi:with-foreign-slots ((start-index end-index) p (:struct slice))
     (setf start-index (slice-start-index slice)
 	  end-index (slice-end-index slice))))
-
-
-
 
 
