@@ -1,4 +1,3 @@
-
 (in-package #:cv)
 
 (defun named-window (name &optional (flags :cv-window-autosize))

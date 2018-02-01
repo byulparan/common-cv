@@ -189,7 +189,7 @@
 
 (defun release-mat* (mat)
   (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem ptr :pointer) mat)
+    (setf (cffi:mem-ref ptr :pointer) mat)
     (release-mat ptr)))
 
 ;;; IplImage
@@ -232,7 +232,7 @@
 
 (defun release-image* (ipl)
   (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem ptr :pointer) ipl)
+    (setf (cffi:mem-ref ptr :pointer) ipl)
     (release-image ptr)))
 
 (cffi:defcfun ("cvSetImageROI" set-image-roi) :void
@@ -278,19 +278,6 @@
   (idx2 :int)
   (value (:struct scalar)))
 
-(cffi:defcfun ("cvmGet" m-get) :double
-  (mat (:pointer (:struct mat)))
-  (row :int)
-  (col :int))
-
-(cffi:defcfun ("cvmSet" m-set) :void
-  (mat (:pointer (:struct mat)))
-  (row :int)
-  (col :int)
-  (value :double))
-
-
-
 ;; 
 ;; IPL-CONV-KERNEL
 (cffi:defcstruct ipl-conv-kernel
@@ -315,7 +302,7 @@
 
 (defun release-structuring-element* (ipl-conv-kernel)
   (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem ptr :pointer) ipl-conv-kernel)
+    (setf (cffi:mem-ref ptr :pointer) ipl-conv-kernel)
     (release-structuring-element ptr)))
 
 
@@ -364,7 +351,7 @@
 
 (defun release-hist* (hist)
   (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem ptr :pointer) hist)
+    (setf (cffi:mem-ref ptr :pointer) hist)
     (release-hist ptr)))
 
 ;;; CvMemStorage
@@ -376,7 +363,7 @@
 
 (defun release-mem-storage* (mem-storage)
   (cffi:with-foreign-objects ((ptr :pointer))
-    (setf (cffi:mem ptt :pointer) mem-storage)
+    (setf (cffi:mem-ref ptt :pointer) mem-storage)
     (release-mem-storage ptr)))
 
 (cffi:defcfun ("cvClearMemStorage" clear-mem-storage) :void
@@ -465,9 +452,9 @@
   (element :pointer)
   (block :pointer))
 
-(cffi:defcfun ("cvCloneSeq" clone-seq) :pointer
-  (seq :pointer)
-  (storage :pointer))
+;; (cffi:defcfun ("cvCloneSeq" clone-seq) :pointer
+;;   (seq :pointer)
+;;   (storage :pointer))
 
 
 ;;; CvSeqWriter
@@ -479,7 +466,7 @@
   (block-min :pointer)
   (block-max :pointer))
 
-(cffi:defcfun ("cvStartWriteSeq" start-write-seq)
+(cffi:defcfun ("cvStartWriteSeq" start-write-seq) :void
   (seq-flags :int)
   (header-size :int)
   (elem-size :int)

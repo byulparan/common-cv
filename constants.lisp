@@ -173,7 +173,7 @@
 
 
 ;;; filter
-(cffi:defcenum :coval-matrix-enum
+(cffi:defcenum :covar-matrix-enum
   (:cv-covar-scrambled 0)
   (:cv-covar-normar 1)
   (:cv-covar-use-avg 2)
