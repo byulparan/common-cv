@@ -1,262 +1,164 @@
 (in-package #:cv)
 
-(defun named-window (name &optional (flags :cv-window-autosize))
-  (cffi:foreign-funcall "cvNamedWindow" :string name
-					:int (cffi:foreign-enum-value :named-window-enum flags)))
+(cffi:defcfun ("cvNamedWindow" named-window) :void
+  (name :string)
+  (flags :named-window-enum))
 
-(defmacro with-named-window ((name &optional (flags :cv-window-autosize)) &body body)
-  `(unwind-protect (progn (named-window ,name ,flags)
-			  ,@body)
-     (cffi:foreign-funcall "cvDestroyWindow" :string ,name)))
+(cffi:defcfun ("cvDestroyWindow" destroy-window) :void
+  (name :string))
 
-(defmethod show-image ((name string) (image ipl-image))
-  (cffi:foreign-funcall "cvShowImage" :string name :pointer (ref image)))
+(cffi:defcfun ("cvShowImage" show-image) :void
+  (name :string)
+  (image :pointer))
 
-(defun wait-key (delay)
-  (cffi:foreign-funcall "cvWaitKey" :int delay :int))
+(cffi:defcfun ("cvWaitKey" wait-key) :int
+  (delay :int))
 
-
-;;; Event
-(defvar *cv-callback* nil)
-(cffi:defcallback mouse-callback :void ((event :int) (x :int) (y :int)
-					(flags :int) (param :pointer))
-  (declare (ignore param))
-  (funcall *cv-callback* (cffi:foreign-enum-keyword :mouse-event-enum event) x y flags))
-
-(defmethod set-mouse-callback ((name string) (callback function))
-  (setf *cv-callback* callback)
-  (cffi:foreign-funcall "cvSetMouseCallback" :string name :pointer (cffi:callback mouse-callback)
-			:pointer (cffi-sys:null-pointer)))
-
-(defun event-decode (&rest flags)
-  (apply #'+ (mapcar #!(cffi:foreign-enum-value :mouse-event-flags-enum %1) flags)))
+(cffi:defcfun ("cvSetMouseCallback" set-mouse-callback) :void
+  (name :string)
+  (callback :pointer)
+  (param :pointer))
 
 
+;;; @videoio
+(cffi:defcfun ("cvCreateCameraCapture" create-camera-capture) :pointer
+  (index :int))
+
+(cffi:defcfun ("cvCreateFileCapture" create-file-capture) :pointer
+  (filename :string))
+
+(cffi:defcfun ("cvReleaseCapture" release-capture) :void
+  (capture :pointer))
+
+(cffi:defcfun ("cvGetCaptureProperty" get-capture-property) :double
+  (capture :pointer)
+  (property-id :cap-prop-enum))
+
+(cffi:defcfun ("cvSetCaptureProperty" set-capture-property) :int
+  (capture :pointer)
+  (property-id :cap-prop-enum)
+  (value :double))
+
+(cffi:defcfun ("cvQueryFrame" query-frame) :pointer
+  (capture :pointer))
 
 
+;;@imgcodecs
+(cffi:defcfun ("cvConvertImage" convert-image) :void
+  (src :pointer)
+  (dst :pointer)
+  (flags :convert-image-enum))
+
+(cffi:defcfun ("cvLoadImage" load-image) :pointer
+  (file :string)
+  (iscolor :ipl-load-image-enum))
+
+(cffi:defcfun ("cvLoadImageM" load-image-m) :pointer
+  (filename :string)
+  (iscolor :ipl-load-image-enum))
+
+;; @core
+(cffi:defcfun ("cvLoad" load) :pointer
+  (filename :string)
+  (memstorage :pointer)
+  (name :string)
+  (real-name :string))
 
 
-(defclass cv-capture ()
-  ((ref :initarg :ref :accessor ref)))
+;; @imgproc
+(cffi:defcfun ("cvLine" line) :void
+  (img :pointer)
+  (pt1 (:struct point))
+  (pt2 (:struct point))
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
-(defun create-camera-capture (index)
-  (let ((camera (cffi:foreign-funcall "cvCreateCameraCapture" :int index :pointer)))
-    (assert (cl:not (cffi-sys:null-pointer-p camera)) nil "not found device index ~d" index)
-    (make-instance 'cv-capture :ref camera)))
+(cffi:defcfun ("cvRectangle" rectangle) :void
+  (img :pointer)
+  (pt1 (:struct point))
+  (pt2 (:struct point))
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
-(defun create-file-capture (path)
-  (let ((ref (cffi:foreign-funcall "cvCreateFileCapture" :string (su:full-pathname path) :pointer)))
-    (assert (cl:not (cffi-sys:null-pointer-p ref)) nil "not load file ~s" path)
-    (make-instance 'cv-capture :ref ref)))
+(cffi:defcfun ("cvCircle" circle) :void
+  (img :pointer)
+  (center (:struct point))
+  (radius :int)
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
-(defmethod release-capture ((capture cv-capture))
-  (cffi:with-foreign-object (ptr :pointer)
-    (setf (cffi:mem-ref ptr :pointer) (ref capture))
-    (cffi:foreign-funcall "cvReleaseCapture" :pointer ptr))
-  (setf (ref capture) nil))
+(cffi:defcfun ("cvEllipse" ellipse) :void
+  (img :pointer)
+  (center (:struct point))
+  (axes (:struct size))
+  (angle :double)
+  (start-angle :double)
+  (end-angle :double)
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
-(defmethod get-capture-property ((cv-capture cv-capture) (property-id symbol))
-  (cffi:foreign-funcall "cvGetCaptureProperty" :pointer (ref cv-capture)
-			:int (cffi:foreign-enum-value :cap-prop-enum property-id) :double))
+(cffi:defcfun ("cvEllipseBox" ellipse-box) :void
+  (img :pointer)
+  (box (:struct box2d))
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
-(defmethod set-capture-property ((cv-capture cv-capture) (property-id symbol) (value number))
-  (cffi:foreign-funcall "cvSetCaptureProperty" :pointer (ref cv-capture)
-			:int (cffi:foreign-enum-value :cap-prop-enum property-id)
-			:double (* 1.0d0 value) :int))
+(cffi:defcfun ("cvFillConvexPoly" fill-convex-poly) :void
+  (img :pointer)
+  (pts :pointer)
+  (npts :int)
+  (color (:struct scalar))
+  (line-type :int)
+  (shift :int))
 
-(defmethod query-frame ((capture cv-capture))
-  (let ((ref (cffi:foreign-funcall "cvQueryFrame" :pointer (ref capture) :pointer)))
-    (when (cffi-sys:null-pointer-p ref)
-      (set-capture-property capture :cv-cap-prop-pos-frame 1)
-      (setf ref (cffi:foreign-funcall "cvQueryFrame" :pointer (ref capture) :pointer)))
-    (reset-info-ipl-image (make-instance 'ipl-image :ref ref))))
+(cffi:defcfun ("cvFillPoly" fill-poly) :void
+  (img :pointer)
+  (ptr :pointer)
+  (npts :pointer)
+  (contours :int)
+  (color (:struct scalar))
+  (line-type :int)
+  (shift :int))
 
-(defmacro with-captured-camera ((name dev-index &key width height) &body body)
-  `(let ((,name (create-camera-capture ,dev-index)))
-     (when ,width
-       (set-capture-property ,name :cv-cap-prop-frame-width ,width))
-     (when ,height
-       (set-capture-property ,name :cv-cap-prop-frame-height ,height))
-     (unwind-protect (progn ,@body)
-       (release-capture ,name))))
-
-(defmacro with-captured-file ((name file-path &key width height) &body body)
-  `(let ((,name (create-file-capture ,file-path)))
-     (when ,width
-       (set-capture-property ,name :cv-cap-prop-frame-width ,width))
-     (when ,height
-       (set-capture-property ,name :cv-cap-prop-frame-height ,height))
-     (unwind-protect (progn ,@body)
-       (release-capture ,name))))
-
-
-
-
-(defmethod convert-image ((src cv-arr) (dst cv-arr) &optional (flags 0))
-  (cffi:foreign-funcall "cvConvertImage" :pointer (ref src) :pointer (ref dst)
-			:int (case flags
-			       (0 0)
-			       (otherwise (cffi:foreign-enum-value :convert-image-enum flags)))))
-
-(defmethod load-image ((path string) (iscolor symbol))
-  (cffi:with-foreign-string (file-path (su:full-pathname path))
-    (let* ((native-ipl-image (cffi:foreign-funcall "cvLoadImage" :pointer file-path
-								 :int (cffi:foreign-enum-value
-								       :ipl-load-image-enum iscolor)
-								 :pointer)))
-      (assert (cl:not (cffi-sys:null-pointer-p native-ipl-image)) nil "can't load image ~s" path)
-      (let ((ipl-image (make-instance 'ipl-image :ref native-ipl-image)))
-	(reset-info-ipl-image ipl-image)))))
-
-
-(defmethod load-file ((path string))
-  (let ((file (cffi:with-foreign-string (c-path (su:full-pathname path))
-		(cffi:foreign-funcall "cvLoad" :pointer c-path
-					       :pointer (cffi-sys:null-pointer)
-					       :pointer (cffi-sys:null-pointer)
-					       :pointer (cffi-sys:null-pointer)
-					       :pointer))))
-    (assert (cl:not (cffi:null-pointer-p file)) nil "can't load file ~s" path)
-    file))
-
-(defmethod load-mat ((path string))
-  (reset-info-mat (make-instance 'cv-mat :ref (load-file path))))
-
-(defmethod load-haar-cascade ((path string))
-  (make-instance 'cv-haar-classifier-cascade :ref (load-file path)))
+(cffi:defcfun ("cvPolyLine" poly-line) :void
+  (img :pointer)
+  (ptr :pointer)
+  (npts :pointer)
+  (contours :int)
+  (is-closed :int)
+  (color (:struct scalar))
+  (thickness :int)
+  (line-type :int)
+  (shift :int))
 
 
-(define-method line ((array cv-arr) (pt1 cv-point) (pt2 cv-point) (color cv-scalar)
-			&optional (thickness 1) (line-type 8) (shift 0))
-  (with-cv-scalar (native-color color)
-    (with-cv-point (native-pt1 pt1)
-      (with-cv-point (native-pt2 pt2)
-	(cffi:foreign-funcall "cv_Line" :pointer (ref array) :pointer native-pt1 :pointer native-pt2
-			      :pointer native-color :int (floor thickness) :int (floor line-type)
-			      :int (floor shift))))))
+(cffi:defcstruct font
+  (name-font :string)
+  (color (:struct scalar))
+  (font-face :font-face-enum)
+  (ascii :pointer)
+  (greek :pointer)
+  (cyrillic :pointer)
+  (hscale :float)
+  (vscale :float)
+  (shear :float)
+  (thickness :int)
+  (dx :float)
+  (line-type :int))
 
-
-(define-method rectangle ((array cv-arr) (pt1 cv-point) (pt2 cv-point) (color cv-scalar)
-			     &optional (thickness 1) (line-type 8) (shift 0))
-  (with-cv-scalar (native-color color)
-    (with-cv-point (native-pt1 pt1)
-      (with-cv-point (native-pt2 pt2)
-	(cffi:foreign-funcall "cv_Rectangle" :pointer (ref array) :pointer native-pt1
-			      :pointer native-pt2 :pointer  native-color
-			      :int (floor thickness) :int (floor line-type) :int (floor shift))))))
-
-(define-method cirlce ((array cv-arr) (center cv-point) (radius number) (color cv-scalar)
-			  &optional (thickness 1) (line-type 8) (shift 0))
-  (with-cv-point (native-center center)
-    (with-cv-scalar (native-color color)
-      (cffi:foreign-funcall "cv_Circle" :pointer (ref array) :pointer native-center
-			    :int (floor radius) :pointer native-color
-			    :int (floor thickness) :int (floor line-type) :int (floor shift)))))
-
-(define-method ellipse ((img cv-arr) (center cv-point) (axes cv-size)
-			   (angle number) (start-angle number) (end-angle number)
-			   (color cv-scalar) &optional (thickness 1) (line-type 8)
-			   (shift 0))
-  (with-cv-point (native-center center)
-    (with-cv-size (native-axes axes)
-      (with-cv-scalar (native-color color)
-	(cffi:foreign-funcall "cv_Ellipse" :pointer (ref img) :pointer native-center
-			      :pointer native-axes :double (* 1.0d0 angle)
-			      :double (* 1.0d0 start-angle) :double (* 1.0d0 end-angle)
-			      :pointer native-color :int (floor thickness) :int (floor line-type)
-			      :int (floor shift))))))
-
-
-(define-method ellipse-box ((img cv-arr) (box cv-box-2d) (color cv-scalar)
-			       &optional (thickness 1) (line-type 8) (shift 0))
-  (with-cv-box-2d (native-box box)
-    (with-cv-scalar (native-color color)
-      (cffi:foreign-funcall "cv_EllipseBox" :pointer (ref img) :pointer native-box
-			    :pointer native-color :int (floor thickness)
-			    :int (floor line-type) :int (floor shift)))))
-
-
-
-(define-method fill-poly ((img cv-arr) (pts list) (npts list) (contours integer)
-			     (color cv-scalar) &optional (line-type 8) (shift 0))
-  (cffi:with-foreign-object (npts-array :int contours)
-    (dotimes (i contours)
-      (setf (cffi:mem-aref npts-array :int i) (nth i npts)))
-    (let ((point-objs (alexandria:flatten pts))
-	  (count (apply #'+ npts)))
-      (cffi:with-foreign-object (cv-point-arr '(:struct CvPoint) count)
-	(dotimes (i count)
-	  (cffi:with-foreign-slots ((x y) (cffi:mem-aptr cv-point-arr '(:struct CvPoint) i) (:struct CvPoint))
-	    (setf x (x (nth i point-objs))
-		  y (y (nth i point-objs)))))
-	(cffi:with-foreign-object (point-array :pointer contours)
-	  (labels ((up-count (lst n)
-		     (if (zerop n) 0
-			 (apply '+ (subseq lst 0 n)))))
-	    (dotimes (i contours)
-	      (setf (cffi:mem-aref point-array :pointer i) (cffi-sys:inc-pointer cv-point-arr
-										 (* (cffi:foreign-type-size 'CvPoint)
-										    (up-count npts i))))))
-	  (with-cv-scalar (native-color color)
-	    (cffi:foreign-funcall "cv_FillPoly" :pointer (ref img) :pointer point-array
-				  :pointer npts-array :int contours :pointer native-color
-				  :int (floor line-type) :int (floor shift))))))))
-
-
-(define-method fill-convex-poly ((img cv-arr) (pts list) (npts integer)
-				 (color cv-scalar) &optional (line-type 8) (shift 0))
-  (cffi:with-foreign-object (pts-array '(:struct CvPoint) npts)
-    (dotimes (i npts)
-      (cffi:with-foreign-slots ((x y) (cffi:mem-aptr pts-array '(:struct CvPoint) i) (:struct CvPoint)) 
-	(setf x (x (nth i pts))
-	      y (y (nth i pts)))))
-    (with-cv-scalar (native-color color)
-       (cffi:foreign-funcall "cv_FillConvexPoly" :pointer (ref img) :pointer pts-array
-						 :int npts :pointer native-color :int (floor line-type) :int (floor shift)))))
-
-
-
-
-
-(define-method poly-line ((img cv-arr) (pts list) (npts list) (contours integer)
-			     (is-closed integer) (color cv-scalar) &optional (thickness 1) (line-type 8) (shift 0))
-  (cffi:with-foreign-object (npts-array :int contours)
-    (dotimes (i contours)
-      (setf (cffi:mem-aref npts-array :int i) (nth i npts)))
-    (let ((point-objs (alexandria:flatten pts))
-	  (count (apply #'+ npts)))
-      (cffi:with-foreign-object (cv-point-arr '(:struct CvPoint) count)
-	(dotimes (i count)
-	  (cffi:with-foreign-slots ((x y) (cffi:mem-aptr cv-point-arr '(:struct CvPoint) i) (:struct CvPoint))
-	    (setf x (x (nth i point-objs))
-		  y (y (nth i point-objs)))))
-	(cffi:with-foreign-object (point-array :pointer contours)
-	  (labels ((up-count (lst n)
-		     (if (zerop n) 0
-			 (apply '+ (subseq lst 0 n)))))
-	    (dotimes (i contours)
-	      (setf (cffi:mem-aref point-array :pointer i) (cffi-sys:inc-pointer cv-point-arr
-										 (* (cffi:foreign-type-size 'CvPoint)
-										    (up-count npts i))))))
-	  (with-cv-scalar (native-color color)
-	    (cffi:foreign-funcall "cv_PolyLine" :pointer (ref img) :pointer point-array
-				  :pointer npts-array :int contours :int is-closed
-				  :pointer native-color :int (floor thickness) :int (floor line-type)
-				  :int (floor shift))))))))
-
-(defmethod put-text ((img cv-arr) (text string) (origin cv-point) (color cv-scalar)
-			(font-face symbol) &optional (hscale 1) (vscale 1)
-					      (shear 0) (thickness 1) (line-type 8))
-  (with-cv-point (native-origin origin)
-    (with-cv-scalar (native-color color)
-      (cffi:foreign-funcall "cv_PutText" :pointer  (ref img) :string text
-					 :pointer native-origin :pointer native-color
-					 :int (cffi:foreign-enum-value :font-face-enum font-face)
-					 :double (* 1.0d0 hscale) :double (* 1.0d0 vscale)
-					 :double (* 1.0d0 shear) :int (floor thickness)
-					 :int (floor line-type)))))
-
-
-
-
-
+(cffi:defcfun ("cvPutText" :put-text) :void
+  (img :pointer)
+  (text :string)
+  (org (:struct point))
+  (font :pointer)
+  (color (:struct scalar)))
