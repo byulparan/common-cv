@@ -356,6 +356,11 @@
   (:cv-dist-welsch 6)
   (:cv-dist-huber 7))
 
+(cffi:defcenum :dist-label-enum
+  (:cv-dist-label-ccomp 0)
+  (:cv-dist-label-pixel 1))
+
+
 (cffi:defcenum :match-enum
   (:CV-TM-SQDIFF        0)
   (:CV-TM-SQDIFF-NORMED 1)

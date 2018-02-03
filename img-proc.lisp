@@ -4,14 +4,14 @@
 ;;                                    Image Processing                                    *
 ;; ***************************************************************************************/
 
-(cffi:defcfun ("cvCopyMakeBorder" copy-make-border) :void
+(define-cfun ("cvCopyMakeBorder" copy-make-border) :void
   (src :pointer)
   (dst :pointer)
   (offset (:struct point))
   (border-type :make-border-enum)
   (value (:struct scalar)))
 
-(cffi:defcfun ("cvSmooth" smooth) :void
+(define-cfun ("cvSmooth" smooth) :void
   (src :pointer)
   (dst :pointer)
   (smooth-type :smooth-method-enum)
@@ -20,85 +20,102 @@
   (sigma1 :double)
   (sigma2 :double))
 
-(cffi:defcfun ("cvFilter2D" filter-2d) :void
+(define-cfun ("cvFilter2D" filter-2d) :void
   (src :pointer)
   (dst :pointer)
   (kernel :pointer)
   (anchor (:struct point)))
 
-(cffi:defcfun ("cvIntegral" integral) :void
+(define-cfun ("cvIntegral" integral) :void
   (image :pointer)
   (sum :pointer)
   (sqsum :pointer)
   (tilted-sum :pointer))
 
-(cffi:defcfun ("cvPyrDown" pyr-down) :void
+(define-cfun ("cvPyrDown" pyr-down) :void
   (src :pointer)
   (dst :pointer)
   (filter :pyramid-enum))
 
-(cffi:defcfun ("cvPyrUp" pyr-up) :void
+(define-cfun ("cvPyrUp" pyr-up) :void
   (src :pointer)
   (dst :pointer)
   (filter :pyramid-enum))
 
-(cffi:defcfun ("cvWatershed" watershed) :void
+(define-cfun ("cvWatershed" watershed) :void
   (image :pointer)
   (markers :pointer))
 
-(cffi:defcfun ("cvSobel" sobel) :void
+(define-cfun ("cvSobel" sobel) :void
   (src :pointer)
   (dst :pointer)
   (x-order :int)
   (y-order :int)
   (aperture-size :int))
 
-(cffi:defcfun ("cvLaplace" laplace) :void
+(define-cfun ("cvLaplace" laplace) :void
   (src :pointer)
   (dst :pointer)
   (aperture-size :int))
 
-(cffi:defcfun ("cvCvtColor" cvt-color) :void
+(define-cfun ("cvCvtColor" cvt-color) :void
   (src :pointer)
   (dst :pointer)
   (code :cvt-color-enum))
 
-(cffi:defcfun ("cvResize" resize) :void
+(define-cfun ("cvResize" resize) :void
   (src :pointer)
   (dst :pointer)
   (iterpolation :resize-enum))
 
-(cffi:defcfun ("cvWrapAffine" wrap-affine) :void
+(define-cfun ("cvWarpAffine" warp-affine) :void
   (src :pointer)
   (dst :pointer)
   (map-matrix :pointer)
   (flags :int)
   (fillval (:struct scalar)))
 
-(cffi:defcfun ("cvGetAffineTransform" get-affine-transform) :void
+(cffi:defcfun ("cvGetAffineTransform" %get-affine-transform) :void
   (src :pointer)
   (dst :pointer)
   (map-matrix :pointer))
 
-(cffi:defcfun ("cv2DRotationMatrix" 2d-rotation-matrix) :pointer
+(defun get-affine-transform (srcs dsts map-matrix)
+  (cffi:with-foreign-objects ((src-ptr '(:struct point2d-32f) (length srcs))
+			      (dst-ptr '(:struct point2d-32f) (length dsts)))
+    (dotimes (i (length srcs))
+      (setf (cffi:mem-aref src-ptr '(:struct point2d-32f) i) (nth i srcs)
+	    (cffi:mem-aref dst-ptr '(:struct point2d-32f) i) (nth i dsts)))
+    (%get-affine-transform src-ptr dst-ptr map-matrix)))
+
+(define-cfun ("cv2DRotationMatrix" 2d-rotation-matrix) :pointer
   (center (:struct point2d-32f))
   (angle :double)
   (scale :double)
   (map-matrix :pointer))
 
-(cffi:defcfun ("cvWrapPerspective" wrap-perspective) :void
+(define-cfun ("cvWarpPerspective" warp-perspective) :void
   (src :pointer)
   (dst :pointer)
   (map-matrix :pointer)
   (flags :int)
   (fillval (:struct scalar)))
 
-(cffi:defcfun ("cvGetPerspectiveTransform" get-perspective-transform) :void
+(cffi:defcfun ("cvGetPerspectiveTransform" %get-perspective-transform) :void
   (src :pointer)
   (dst :pointer)
   (map-matrix :pointer))
 
-(cffi:defcfun ("cvRemap" remap) :void
+(defun get-perspective-transform (srcs dsts map-matrix)
+  (cffi:with-foreign-objects ((src-ptr '(:struct point2d-32f) (length srcs))
+			      (dst-ptr '(:struct point2d-32f) (length dsts)))
+    (dotimes (i (length srcs))
+      (setf (cffi:mem-aref src-ptr '(:struct point2d-32f) i) (nth i srcs)
+	    (cffi:mem-aref dst-ptr '(:struct point2d-32f) i) (nth i dsts)))
+    (%get-perspective-transform src-ptr dst-ptr map-matrix)))
+
+
+(define-cfun ("cvRemap" remap) :void
   (src :pointer)
   (dst :pointer)
   (map-x :pointer)
@@ -106,14 +123,14 @@
   (flags :int)
   (fillval (:struct scalar)))
 
-(cffi:defcfun ("cvLogPolar" log-polar) :void
+(define-cfun ("cvLogPolar" log-polar) :void
   (src :pointer)
   (dst :pointer)
   (center (:struct point2d-32f))
   (m :double)
   (flags :int))
 
-(cffi:defcfun ("cvCreateStructuringElementEx" create-structuring-element-ex)
+(define-cfun ("cvCreateStructuringElementEx" create-structuring-element-ex)
     (:pointer (:struct ipl-conv-kernel))
   (cols :int)
   (rows :int)
@@ -122,22 +139,27 @@
   (shape :int)
   (values :pointer))
 
-(cffi:defcfun ("cvReleaseStructuringElement" release-structuring-element) :void
+(cffi:defcfun ("cvReleaseStructuringElement" %release-structuring-element) :void
   (ptr :pointer))
 
-(cffi:defcfun ("cvErode" erode) :void
+(defun release-structuring-element (ipl-conv-kernel)
+  (cffi:with-foreign-object (ptr :pointer)
+    (setf (cffi:mem-ref ptr :pointer) ipl-conv-kernel)
+    (%release-structuring-element ptr)))
+
+(define-cfun ("cvErode" erode) :void
   (src :pointer)
   (dst :pointer)
   (ipl-conv-kernel :pointer)
   (iterations :int))
 
-(cffi:defcfun ("cvDilate" dilate) :void
+(define-cfun ("cvDilate" dilate) :void
   (src :pointer)
   (dst :pointer)
   (ipl-conv-kernel :pointer)
   (iterations :int))
 
-(cffi:defcfun ("cvMorphologyEx" morphology-ex) :void
+(define-cfun ("cvMorphologyEx" morphology-ex) :void
   (src :pointer)
   (dst :pointer)
   (temp :pointer)
@@ -145,37 +167,37 @@
   (operation :morphology-enum)
   (iterations :int))
 
-(cffi:defcfun ("cvMoments" moments) :void
+(define-cfun ("cvMoments" moments) :void
   (moments :pointer)
   (binary :int))
 
-(cffi:defcfun ("cvGetSpatialMoment" get-spatial-moment) :double
+(define-cfun ("cvGetSpatialMoment" get-spatial-moment) :double
   (moments :pointer)
   (x-order :int)
   (y-order :int))
 
-(cffi:defcfun ("cvGetCentralMoment" get-central-moment) :double
+(define-cfun ("cvGetCentralMoment" get-central-moment) :double
   (moment :pointer)
   (x-order :int)
   (y-order :int))
 
-(cffi:defcfun ("cvGetNormalizedCentralMoment" get-normalized-central-moment) :double
+(define-cfun ("cvGetNormalizedCentralMoment" get-normalized-central-moment) :double
   (moment :pointer)
   (x-order :int)
   (y-order :int))
 
-(cffi:defcfun ("cvGetQuadrangleSubPix" get-quadrangle-sub-pix) :void
+(define-cfun ("cvGetQuadrangleSubPix" get-quadrangle-sub-pix) :void
   (src :pointer)
   (dst :pointer)
   (map-matrix :pointer))
 
-(cffi:defcfun ("cvMatchTemplate" match-template) :void
+(define-cfun ("cvMatchTemplate" match-template) :void
   (image :pointer)
   (templ :pointer)
   (result :pointer)
   (method :match-enum))
 
-(cffi:defcfun ("cvCalcEMD2" calc-emd2) :float
+(define-cfun ("cvCalcEMD2" calc-emd2) :float
   (signature1 :pointer)
   (signature2 :pointer)
   (distance-type :dist-enum)
@@ -189,7 +211,7 @@
 ;;                              Contours retrieving                                       *
 ;; ****************************************************************************************/
 
-(cffi:defcfun ("cvFindContours" find-contours) :int
+(cffi:defcfun ("cvFindContours" %find-contours) :int
   (image :pointer)
   (storage :pointer)
   (first-contour :pointer)
@@ -198,7 +220,17 @@
   (method :contours-memthod-enum)
   (offset (:struct point)))
 
-(cffi:defcfun ("cvStartFindContours" start-find-contours) :pointer
+(defun find-contours (image storage
+		      &optional
+			(header-size 128)
+			(mode :cv-retr-list)
+			(method :CV-CHAIN-APPROX-SIMPLE)
+			(offset (cv:point 0 0)))
+  (cffi:with-foreign-object (find-contour :pointer)
+    (%find-contours image storage find-contour header-size mode method offset)
+    (cffi:mem-ref find-contour :pointer)))
+
+(define-cfun ("cvStartFindContours" start-find-contours) :pointer
   (image :pointer)
   (storage :pointer)
   (header-size :int)
@@ -206,17 +238,23 @@
   (method :contours-memthod-enum)
   (offset (:struct point)))
 
-(cffi:defcfun ("cvFindNextContour" find-next-contour) :pointer
+(cffi:defcfun ("cvFindNextContour" %find-next-contour) :pointer
   (scanner :pointer))
 
-(cffi:defcfun ("cvSubstitudeContour" substitude-contour) :void
+(defun find-next-contour (scanner)
+  (let* ((contour (%find-next-contour scanner)))
+    (if (cffi:null-pointer-p contour) nil
+      contour)))
+
+
+(define-cfun ("cvSubstitudeContour" substitude-contour) :void
   (scanner :pointer)
   (new-contour :pointer))
 
-(cffi:defcfun ("cvEndFindContours" end-find-contours) :pointer
+(define-cfun ("cvEndFindContours" end-find-contours) :pointer
   (scanner :pointer))
 
-(cffi:defcfun ("cvApproxChains" approx-chains) :pointer
+(define-cfun ("cvApproxChains" approx-chains) :pointer
   (seq :pointer)
   (storage :pointer)
   (method :contours-memthod-enum)
@@ -224,10 +262,10 @@
   (minimal-perimeter :int)
   (recursive :int))
 
-(cffi:defcfun ("cvStartReadChainPoints" start-read-chain-points) :pointer
+(define-cfun ("cvStartReadChainPoints" start-read-chain-points) :pointer
   (chain :pointer))
 
-(cffi:defcfun ("cvReadChainPoint" read-chain-point) (:struct point)
+(define-cfun ("cvReadChainPoint" read-chain-point) (:struct point)
   (reader :pointer))
 
 
@@ -235,7 +273,7 @@
 ;;                            Contour Processing and Shape Analysis                       *
 ;; ****************************************************************************************/
 
-(cffi:defcfun ("cvApproxPoly" approx-poly) :pointer
+(define-cfun ("cvApproxPoly" approx-poly) :pointer
   (src-seq :pointer)
   (header-size :int)
   (storage :pointer)
@@ -244,7 +282,7 @@
   (recursive :int))
 
 
-(cffi:defcfun ("cvArcLength" arc-length) :double
+(define-cfun ("cvArcLength" arc-length) :double
   (curve :pointer)
   (slice (:struct slice))
   (is-closed :int))
@@ -253,56 +291,56 @@
   (arc-length contour (slice 0 #x3fffffff) 1))
 
 
-(cffi:defcfun ("cvBoudingRect" bounding-rect) (:struct rect)
+(define-cfun ("cvBoudingRect" bounding-rect) (:struct rect)
   (points :pointer)
   (update :int))
 
-(cffi:defcfun ("cvContourArea" contour-area) :double
+(define-cfun ("cvContourArea" contour-area) :double
   (contour :pointer)
   (slice (:struct slice))
   (oriented :int))
 
-(cffi:defcfun ("cvMinAreaRect2" min-area-rect2) (:struct box2d)
+(define-cfun ("cvMinAreaRect2" min-area-rect2) (:struct box2d)
   (points :pointer)
   (storage :pointer))
 
-(cffi:defcfun ("cvMinEnclosingCircle" min-enclosing-circle) :int
+(define-cfun ("cvMinEnclosingCircle" min-enclosing-circle) :int
   (points :pointer)
   (center :pointer)
   (radius :pointer))
 
-(cffi:defcfun ("cvMatchShapes" match-shapes) :double
+(define-cfun ("cvMatchShapes" match-shapes) :double
   (object1 :pointer)
   (object2 :pointer)
   (method :contours-match-enum)
   (parameter :double))
 
-(cffi:defcfun ("cvConvexHull2" convex-hull) :pointer
+(define-cfun ("cvConvexHull2" convex-hull) :pointer
   (input :pointer)
   (hull-storage :pointer)
   (orientation :int)
   (return-points :int))
 
-(cffi:defcfun ("cvCheckContourConvexity" check-contour-convexity) :int
+(define-cfun ("cvCheckContourConvexity" check-contour-convexity) :int
   (contour :pointer))
 
-(cffi:defcfun ("cvConvexityDefects" convexity-defects) :pointer
+(define-cfun ("cvConvexityDefects" convexity-defects) :pointer
   (contour :pointer)
   (convexhull :pointer)
   (storage :pointer))
 
-(cffi:defcfun ("cvFitEllipse2" fit-ellipse2) (:struct box2d)
+(define-cfun ("cvFitEllipse2" fit-ellipse2) (:struct box2d)
   (points :pointer))
 
-(cffi:defcfun ("cvMaxRect" max-rect) (:struct rect)
+(define-cfun ("cvMaxRect" max-rect) (:struct rect)
   (rect1 :pointer)
   (rect2 :pointer))
 
-(cffi:defcfun ("cvBoxPoints" box-points) :void
+(define-cfun ("cvBoxPoints" box-points) :void
   (box (:struct box2d))
   (pt (:struct point2d-32f) :count 4))
 
-(cffi:defcfun ("cvPointPolygonTest" point-polygon-test) :double
+(define-cfun ("cvPointPolygonTest" point-polygon-test) :double
   (contour :pointer)
   (pt (:struct point2d-32f))
   (measure-dist :int))
@@ -312,87 +350,89 @@
 ;;                                  Histogram functions                                   *
 ;; ****************************************************************************************/
 
-(cffi:defcfun ("cvCreateHist" create-hist) :pointer
+(cffi:defcfun ("cvCreateHist" %create-hist) :pointer
   (dims :int)
   (sizes :pointer)
   (type :hist-enum)
   (ranges :pointer)
   (uniform :int))
 
-;; (defun create-hist* (dims sizes type &optional ranges (uniform 1))
-;;   (let* ((ref nil))
-;;     (cffi:with-foreign-objects ((native-size :int (length sizes)))
-;;       (dotimes (i (length sies))
-;; 	(setf (cffi:mem-aref native-size :int i) (nth i sizes)))
-;;       (if ranges (cffi:with-foreign-object (ranges-pointer :pointer (length ranges))
-;; 		   (dotimes (i (length ranges))
-;; 		     (let ((elements (cffi:foreign-alloc :float :count (length (nth i ranges)))))
-;; 		       (dotimes (k (length (nth i ranges)))
-;; 			 (setf (cffi:mem-aref elements :float k) (coerce (nth k (nth i ranges)) 'single-float)))
-;; 		       (setf (cffi:mem-aref ranges-pointer :pointer i) elements)))
-;; 		   (setf ref (cffi:foreign-funcall "cvCreateHist"
-;; 						   :int (floor dims)
-;; 						   :pointer native-size
-;; 						   :int (cffi:foreign-enum-value :hist-enum type)
-;; 						   :pointer ranges-pointer
-;; 						   :int (floor uniform)
-;; 						   :pointer))
-;; 		   (dotimes (i (length ranges))
-;; 		     (cffi-sys:foreign-free (cffi:mem-aref ranges-pointer :pointer i))))
-;; 	(setf ref (cffi:foreign-funcall "cvCreateHist"
-;; 					:int (floor dims)
-;; 					:pointer native-size
-;; 					:int (cffi:foreign-enum-value :hist-enum type)
-;; 					:pointer (cffi:null-pointer)
-;; 					:int (floor uniform)
-;; 					:pointer))))
-;;     ref))
+(defun create-hist (dims sizes type &optional ranges (uniform 1))
+  (let* ((ref nil))
+    (cffi:with-foreign-objects ((size-array :int (length sizes)))
+      (dotimes (i (length sizes))
+	(setf (cffi:mem-aref size-array :int i) (nth i sizes)))
+      (cffi:with-foreign-object (ranges-pointer :pointer (length ranges))
+	(dotimes (i (length ranges))
+	  (let ((elements (cffi:foreign-alloc :float :count (length (nth i ranges)))))
+	    (dotimes (k (length (nth i ranges)))
+	      (setf (cffi:mem-aref elements :float k) (coerce (nth k (nth i ranges)) 'single-float)))
+	    (setf (cffi:mem-aref ranges-pointer :pointer i) elements)))
+	(setf ref (%create-hist (floor dims) size-array type (if ranges ranges-pointer (cffi:null-pointer)) (floor uniform)))
+	(dotimes (i (length ranges))
+	  (cffi-sys:foreign-free (cffi:mem-aref ranges-pointer :pointer i)))))
+    ref))
 
-
-(cffi:defcfun ("cvReleaseHist" release-hist) :void
+(cffi:defcfun ("cvReleaseHist" %release-hist) :void
   (ptr :pointer))
 
-(cffi:defcfun ("cvClearHist" clear-hist) :void
+(defun release-hist (histogram)
+  (cffi:with-foreign-object (ptr :pointer)
+    (setf (cffi:mem-ref ptr :pointer) histogram)
+    (%release-hist ptr)))
+
+(define-cfun ("cvClearHist" clear-hist) :void
   (hist :pointer))
 
-(cffi:defcfun ("cvGetMinMaxHistValue" get-min-max-hist-value) :void
+(cffi:defcfun ("cvGetMinMaxHistValue" %get-min-max-hist-value) :void
   (hist :pointer)
   (min-value :pointer)
   (max-value :pointer)
   (min-idx :pointer)
   (max-idx :pointer))
 
-(cffi:defcfun ("cvNormalizeHist" normalize-hist) :void
+(defun get-min-max-hist-value (hist)
+  (cffi:with-foreign-objects ((min-value :float)
+			      (max-value :float)
+			      (min-idx :int)
+			      (max-idx :int))
+    (%get-min-max-hist-value hist min-value max-value min-idx max-idx)
+    (values (cffi:mem-ref min-value :float)
+	    (cffi:mem-ref max-value :float)
+	    (cffi:mem-ref min-idx :int)
+	    (cffi:mem-ref max-idx :int))))
+
+(define-cfun ("cvNormalizeHist" normalize-hist) :void
   (hist :pointer)
   (factor :double))
 
-(cffi:defcfun ("cvThreshHist" thresh-hist) :void
+(define-cfun ("cvThreshHist" thresh-hist) :void
   (hist :pointer)
   (threshold :double))
 
-(cffi:defcfun ("cvCompareHist" compare-hist) :void
+(define-cfun ("cvCompareHist" compare-hist) :void
   (hist1 :pointer)
   (hist2 :pointer)
   (method :hist-compare-enum))
 
-(cffi:defcfun ("cvCopyHist" copy-hist) :void
+(define-cfun ("cvCopyHist" copy-hist) :void
   (src :pointer)
   (dst :pointer))
 
 ;;; @renaming 
-(cffi:defcfun ("cvCalcArrHist" calc-hist) :void
+(define-cfun ("cvCalcArrHist" calc-hist) :void
   (images :pointer)
   (hist :pointer)
   (accumulate :int)
   (mask :pointer))
 
 ;;; @renaming 
-(cffi:defcfun ("cvCalcArrBackProject" calc-back-project) :void
+(define-cfun ("cvCalcArrBackProject" calc-back-project) :void
   (images :pointer)
   (back-project :pointer)
   (hist :pointer))
 
-(cffi:defcfun ("cvCalcArrBackProjectPatch" calc-back-project-patch) :void
+(define-cfun ("cvCalcArrBackProjectPatch" calc-back-project-patch) :void
   (images :pointer)
   (dst :pointer)
   (range (:struct size))
@@ -400,26 +440,41 @@
   (method :hist-compare-enum)
   (factor :double))
 
-(cffi:defcfun ("cvEqualizeHist" equalize-hist) :void
+(define-cfun ("cvEqualizeHist" equalize-hist) :void
   (src :pointer)
   (dst :pointer))
 
-(cffi:defcfun ("cvDistTransform" dist-transform) :void
+(cffi:defcfun ("cvDistTransform" %dist-transform) :void
   (src :pointer)
   (dst :pointer)
   (distance-type :dist-enum)
   (mask-size :int)
   (mask :pointer)
-  (labels :pointer))
+  (labels :pointer)
+  (label-type :dist-label-enum))
 
-(cffi:defcfun ("cvThreshold" threshold) :void
+(defun dist-transform (src dst &optional
+				 (distance-type :cv-dist-l2)
+				 (mask-size 3)
+				 mask
+				 labels
+				 (labels-type :cv-dist-label-ccomp))
+  (cffi:with-foreign-object (mask-ptr :float (length mask))
+    (dotimes (i (length mask))
+      (setf (cffi:mem-aref mask-ptr :float i) (coerce (nth i mask) 'single-float)))
+    (%dist-transform src dst distance-type mask-size
+		     (if mask mask-ptr (cffi:null-pointer))
+		     (if labels labels (cffi:null-pointer))
+		     labels-type)))
+
+(define-cfun ("cvThreshold" threshold) :void
   (src :pointer)
   (dst :pointer)
   (threshold :double)
   (max-value :double)
   (threshold-type :threshold-enum))
 
-(cffi:defcfun ("cvAdaptiveThreshold" adaptive-threshold) :void
+(define-cfun ("cvAdaptiveThreshold" adaptive-threshold) :void
   (src :pointer)
   (dst :pointer)
   (max-val :double)
@@ -428,7 +483,7 @@
   (block-size :int)
   (param1 :double))
 
-(cffi:defcfun ("cvFloodFill" floor-fill) :void
+(define-cfun ("cvFloodFill" floor-fill) :void
   (image :pointer)
   (seed-point (:struct point))
   (new-val (:struct scalar))
@@ -443,7 +498,7 @@
 ;;                                  Feature detection                                     *
 ;; ****************************************************************************************/
 
-(cffi:defcfun ("cvCanny" canny) :void
+(define-cfun ("cvCanny" canny) :void
   (image :pointer)
   (edges :pointer)
   (threshold1 :double)
@@ -454,7 +509,7 @@
 ;;                                     Drawing                                            *
 ;; ****************************************************************************************/
 
-(cffi:defcfun ("cvLine" line) :void
+(define-cfun ("cvLine" line) :void
   (img :pointer)
   (pt1 (:struct point))
   (pt2 (:struct point))
@@ -463,7 +518,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvRectangle" rectangle) :void
+(define-cfun ("cvRectangle" rectangle) :void
   (img :pointer)
   (pt1 (:struct point))
   (pt2 (:struct point))
@@ -472,7 +527,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvCircle" circle) :void
+(define-cfun ("cvCircle" circle) :void
   (img :pointer)
   (center (:struct point))
   (radius :int)
@@ -481,7 +536,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvEllipse" ellipse) :void
+(define-cfun ("cvEllipse" ellipse) :void
   (img :pointer)
   (center (:struct point))
   (axes (:struct size))
@@ -493,7 +548,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvEllipseBox" ellipse-box) :void
+(define-cfun ("cvEllipseBox" ellipse-box) :void
   (img :pointer)
   (box (:struct box2d))
   (color (:struct scalar))
@@ -501,7 +556,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvFillConvexPoly" fill-convex-poly) :void
+(define-cfun ("cvFillConvexPoly" fill-convex-poly) :void
   (img :pointer)
   (pts :pointer)
   (npts :int)
@@ -509,7 +564,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvFillPoly" fill-poly) :void
+(define-cfun ("cvFillPoly" fill-poly) :void
   (img :pointer)
   (ptr :pointer)
   (npts :pointer)
@@ -518,7 +573,7 @@
   (line-type :int)
   (shift :int))
 
-(cffi:defcfun ("cvPolyLine" poly-line) :void
+(define-cfun ("cvPolyLine" poly-line) :void
   (img :pointer)
   (ptr :pointer)
   (npts :pointer)
@@ -543,7 +598,7 @@
   (dx :float)
   (line-type :int))
 
-(cffi:defcfun ("cvPutText" put-text) :void
+(define-cfun ("cvPutText" put-text) :void
   (img :pointer)
   (text :string)
   (org (:struct point))
@@ -551,7 +606,7 @@
   (color (:struct scalar)))
 
 
-(cffi:defcfun ("cvDrawContours" draw-contours) :void
+(define-cfun ("cvDrawContours" draw-contours) :void
   (image :pointer)
   (contour :pointer)
   (external-color (:struct scalar))

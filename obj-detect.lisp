@@ -1,6 +1,6 @@
 (in-package #:cv)
 
-(cffi:defcfun ("cvHaarDetectObjects" haar-detect-objects) :pointer
+(define-cfun ("cvHaarDetectObjects" haar-detect-objects) :pointer
   (image :pointer)
   (cascade :pointer)
   (storage :pointer)
@@ -10,4 +10,7 @@
   (min-size (:struct size))
   (max-size (:struct size)))
 
+(define-cfun ("cvLoadHaarClassifierCascade" load-haar-classifier-cascade) :pointer
+  (directory :string)
+  (orig-window-size (:struct size)))
 

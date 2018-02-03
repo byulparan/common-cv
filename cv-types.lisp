@@ -53,7 +53,7 @@
 
 (defmethod cffi:translate-into-foreign-memory (point (type %CvPoint2D64f) p)
   (cffi:with-foreign-slots ((x y) p (:struct Point2D-64f))
-    (setf x (point2d-64f-x point)
+    (setf x (point2d-64f-x  point)
 	  y (point2d-64f-y point))))
 
 
@@ -128,7 +128,7 @@
 
 
 (defmethod cffi:translate-from-foreign (p (type %CvRect))
-  (cffi:with-foreign-slots ((x y widht height) p (:struct Rect))
+  (cffi:with-foreign-slots ((x y width height) p (:struct Rect))
     (rect x y width height)))
 
 (defmethod cffi:translate-into-foreign-memory (rect (type %CvRect) p)
@@ -143,8 +143,8 @@
   (val :double :count 4))
 
 (defstruct (scalar
-	    (:constructor scalar (val0 val1 val2 val3)))
-  val0 val1 val2 val3)
+	    (:constructor scalar (d0 d1 d2 d3)))
+  d0 d1 d2 d3)
 
 (defmethod cffi:translate-from-foreign (p (type %CvScalar))
   (cffi:with-foreign-slots ((val) p (:struct Scalar))
@@ -155,10 +155,10 @@
 
 (defmethod cffi:translate-into-foreign-memory (scalar (type %CvScalar) p)
   (cffi:with-foreign-slots ((val) p (:struct Scalar))
-    (setf (cffi:mem-aref val :double 0) (coerce (scalar-val0 scalar) 'double-float)
-	  (cffi:mem-aref val :double 1) (coerce (scalar-val1 scalar) 'double-float)
-	  (cffi:mem-aref val :double 2) (coerce (scalar-val2 scalar) 'double-float)
-	  (cffi:mem-aref val :double 3) (coerce (scalar-val3 scalar) 'double-float))))
+    (setf (cffi:mem-aref val :double 0) (coerce (scalar-d0 scalar) 'double-float)
+	  (cffi:mem-aref val :double 1) (coerce (scalar-d1 scalar) 'double-float)
+	  (cffi:mem-aref val :double 2) (coerce (scalar-d2 scalar) 'double-float)
+	  (cffi:mem-aref val :double 3) (coerce (scalar-d3 scalar) 'double-float))))
 
 (defun scalar-all (number)
   (let ((number (coerce number 'double-float)))
