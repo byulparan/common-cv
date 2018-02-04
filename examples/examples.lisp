@@ -15,7 +15,7 @@
    For non SBCL this wraps body in a progn."
   `(trivial-main-thread:call-in-main-thread
     (lambda () 
-      #+sbcl (sb-int:with-float-traps-masked (:invalid :divide-by-zero)
+      #+sbcl (sb-int:with-float-traps-masked (:invalid :divide-by-zero :overflow)
 	       ,@body)
       #+ccl (unwind-protect (progn
 			       (ccl:set-fpu-mode :invalid nil)
