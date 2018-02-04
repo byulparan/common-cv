@@ -121,7 +121,7 @@
   (map-x :pointer)
   (map-y :pointer)
   (flags :int (+ +inter-linear+ +warp-fill-outliers+))
-  (fillval (:struct scalar)))
+  (fillval (:struct scalar) (scalar-all 0)))
 
 (define-cfun ("cvLogPolar" log-polar) :void
   (src :pointer)
@@ -247,8 +247,7 @@
     (if (cffi:null-pointer-p contour) nil
       contour)))
 
-
-(define-cfun ("cvSubstitudeContour" substitude-contour) :void
+(define-cfun ("cvSubstituteContour" substitute-contour) :void
   (scanner :pointer)
   (new-contour :pointer))
 

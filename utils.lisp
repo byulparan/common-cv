@@ -3,9 +3,14 @@
 (defmacro define-cfun ((c-name name) return-type &body body)
   `(progn
      (defun ,name ,(loop for p in body
-			  with a = () with b = ()
-			  do (if (= (length p) 2) (push (car p) a)
-			       (push (list (car p) (third p)) b))
+			 with optional = nil
+			 with a = () with b = ()
+			 do (if (= (length p) 2) (progn
+						   (when optional (error "why not optional?"))
+						   (push (car p) a))
+			      (progn
+				(setf optional t)
+				(push (list (car p) (third p)) b)))
 			 finally (return (append (reverse a) (cons '&optional (reverse b)))))
        (cffi:foreign-funcall
 	,c-name
