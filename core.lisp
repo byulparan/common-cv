@@ -3,23 +3,29 @@
 ;; ****************************************************************************************\
 ;;          Array allocation, deallocation, initialization and access to elements         *
 ;; ***************************************************************************************/
+(define-cfun ("cvAlloc" alloc) :pointer
+  (size :sizet))
+
+(define-cfun ("cvFree_" free) :void
+  (ptr :pointer))
+
 (define-cfun ("cvCreateImageHeader" create-image-header) :pointer
   (size (:struct size))
   (depth :int)
   (channels :int))
 
+(define-cfun ("cvInitImageHeader" init-image-header) :pointer
+  (image :pointer)
+  (size (:struct size))
+  (depth :int)
+  (channels :int)
+  (origin :int 0)
+  (align :int 4))
+
 (define-cfun ("cvCreateImage" create-image) :pointer
   (size (:struct size))
   (depth :int)
   (channels :int))
-
-(cffi:defcfun ("cvReleaseImage" %release-image) :void
-  (ptr :pointer))
-
-(defun release-image (ipl-image)
-  (cffi:with-foreign-object (ptr :pointer)
-    (setf (cffi:mem-ref ptr :pointer) ipl-image)
-    (%release-image ptr)))
 
 (cffi:defcfun ("cvReleaseImageHeader" %release-image-header) :void
   (ptr :pointer))
@@ -29,17 +35,48 @@
     (setf (cffi:mem-ref ptr :pointer) ipl-image)
     (%release-image-header ptr)))
 
+(cffi:defcfun ("cvReleaseImage" %release-image) :void
+  (ptr :pointer))
+
+(defun release-image (ipl-image)
+  (cffi:with-foreign-object (ptr :pointer)
+    (setf (cffi:mem-ref ptr :pointer) ipl-image)
+    (%release-image ptr)))
+
 (define-cfun ("cvCloneImage" clone-image) :pointer
   (ipl-image :pointer))
 
+(define-cfun ("cvSetImageCOI" set-image-coi) :void
+  (image :pointer)
+  (coi :int))
+
+(define-cfun ("cvGetImageCOI" get-image-coi) :int
+  (image :pointer))
+
 (define-cfun ("cvSetImageROI" set-image-roi) :void
-  (ipl :pointer)
+  (image :pointer)
   (rect (:struct rect)))
 
 (define-cfun ("cvResetImageROI" reset-image-roi) :void
-  (ipl :pointer))
+  (image :pointer))
 
+(define-cfun ("cvGetImageROI" get-image-roi) (:struct rect)
+  (image :pointer))
 
+(define-cfun ("cvCreateMatHeader" create-mat-header) :pointer
+  (rows :int)
+  (cols :int)
+  (type :int))
+
+;;#define CV_AUTOSTEP  0x7fffffff
+
+(define-cfun ("cvInitMatHeader" init-mat-header) :pointer
+  (mat :pointer)
+  (rows :int)
+  (cols :int)
+  (type :int)
+  (data :pointer (cffi:null-pointer))
+  (step :int #x7fffffff))
 
 (define-cfun ("cvCreateMat" create-mat) (:pointer (:struct mat))
   (rows :int)
@@ -54,12 +91,16 @@
     (setf (cffi:mem-ref ptr :pointer) mat)
     (%release-mat ptr)))
 
+;;; cvDecRefData
+;;; cvIncRefData
+
+(define-cfun ("cvCloneMat" clone-mat) :pointer
+  (mat :pointer))
+
 (define-cfun ("cvGetSubRect" get-sub-rect) :pointer
   (arr :pointer)
   (submat :pointer)
   (rect (:struct rect)))
-
-
 
 (defun get-row (arr submat row)
   (get-rows arr submat row (+ row 1) 1))
@@ -85,6 +126,65 @@
   (submat :pointer)
   (diag :int 0))
 
+(define-cfun ("cvScalarToRawData" scalar-to-row-data) :void
+  (scalar :pointer)
+  (data :pointer)
+  (type :int)
+  (extend-to-12 :int 0))
+
+(define-cfun ("cvRawDataToScalar" raw-data-to-scalar) :void
+  (data :pointer)
+  (type :int)
+  (scalar :pointer))
+
+(define-cfun ("cvCreateMatNDHeader" create-mat-nd-header) :pointer
+  (dims :int)
+  (sizes :pointer)
+  (type :int))
+
+(define-cfun ("cvCreateMatND" create-mat-nd) :pointer
+  (dims :int)
+  (sizes :pointer)
+  (type :int))
+
+(define-cfun ("cvInitMatNDHeader" init-mat-nd-header) :pointer
+  (mat-nd :pointer)
+  (dims :int)
+  (sizes :pointer)
+  (type :int)
+  (data :pointer (cffi:null-pointer)))
+
+(defun release-mat-nd (mat)
+  (release-mat mat))
+
+(define-cfun ("cvCloneMatND" clone-mat-nd) :pointer
+  (mat-nd :pointer))
+
+(define-cfun ("cvCreateSparseMat" create-sparse-mat) :pointer
+  (dims :int)
+  (sizes :pointer)
+  (type :int))
+
+(cffi:defcfun ("cvReleaseSparseMat" %release-sparse-mat) :void
+  (mat :pointer))
+
+(defun release-sparse-mat (mat)
+  (cffi:with-foreign-object (ptr :pointer)
+    (setf (cffi:mem-ref ptr :pointer) mat)
+    (%release-sparse-mat ptr)))
+
+(define-cfun ("cvInitSparseMatIterator" init-sparse-mat-iterator) :pointer
+  (sparse-mat :pointer)
+  (mat-iterator :pointer))
+
+;;; cvGetNextSparseNode
+;;; cvInitNArrayIterator
+;;; cvNextNArraySlice
+
+
+(define-cfun ("cvGetElemType" get-elem-type) :int
+  (arr :pointer))
+
 (define-cfun ("cvGetDims" get-dims) :int
   (arr :pointer)
   (sizes :pointer (cffi:null-pointer)))
@@ -92,6 +192,31 @@
 (define-cfun ("cvGetDimSize" get-dim-size) :int
   (arr :pointer)
   (index :int))
+
+(define-cfun ("cvPtr1D" ptr-1d) :pointer
+  (arr :pointer)
+  (idx0 :int)
+  (type :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvPtr2D" ptr-2d) :pointer
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int)
+  (type :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvPtr3D" ptr-3d) :pointer
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int)
+  (idx2 :int)
+  (type :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvPtrND" ptr-nd) :pointer
+  (arr :pointer)
+  (idx :pointer)
+  (type :pointer (cffi:null-pointer))
+  (create-node :int 1)
+  (precalc-hashval :pointer (cffi:null-pointer)))
 
 
 (define-cfun ("cvGet1D" get-1d) (:struct scalar)
@@ -108,6 +233,32 @@
   (idx0 :int)
   (idx1 :int)
   (idx2 :int))
+
+(define-cfun ("cvGetND" get-nd) (:struct scalar)
+  (arr :pointer)
+  (idx :pointer))
+
+
+(define-cfun ("cvGetReal1D" get-real-1d) :double
+  (arr :pointer)
+  (idx0 :int))
+
+(define-cfun ("cvGetReal2D" get-real-2d) :double
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int))
+
+(define-cfun ("cvGetReal3D" get-real-3d) :double
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int)
+  (idx2 :int))
+
+(define-cfun ("cvGetRealND" get-real-nd) :double
+  (arr :pointer)
+  (idx :pointer))
+
+
 
 (define-cfun ("cvSet1D" set-1d) :void
   (arr :pointer)
@@ -127,9 +278,83 @@
   (idx2 :int)
   (value (:struct scalar)))
 
+(define-cfun ("cvSetND" set-nd) :void
+  (arr :pointer)
+  (idx :pointer)
+  (value (:struct scalar)))
+
+
+(define-cfun ("cvSetReal1D" set-real-1d) :void
+  (arr :pointer)
+  (idx0 :int)
+  (value :double))
+
+(define-cfun ("cvSetReal2D" set-real-2d) :void
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int)
+  (value :double))
+
+(define-cfun ("cvSetReal3D" set-real-3d) :void
+  (arr :pointer)
+  (idx0 :int)
+  (idx1 :int)
+  (idx2 :int)
+  (value :double))
+
+(define-cfun ("cvSetRealND" set-real-nd) :void
+  (arr :pointer)
+  (idx :pointer)
+  (value :double))
+
+(define-cfun ("cvClearND" clear-nd) :void
+  (arr :pointer)
+  (idx :pointer))
+
+(define-cfun ("cvGetMat" get-mat) :pointer
+  (arr :pointer)
+  (header :pointer)
+  (coi :pointer (cffi:null-pointer))
+  (allow-nd :int 0))
+
+(define-cfun ("cvGetImage" get-image) :pointer
+  (arr :pointer)
+  (image-header :pointer))
+
+(define-cfun ("cvReshapeMatND" reshape-mat-nd) :pointer
+  (arr :pointer)
+  (sizeof-header :int)
+  (header :pointer)
+  (new-cn :int)
+  (new-dims :int)
+  (new-sizes :pointer))
+
+(define-cfun ("cvReshape" reshape) :pointer
+  (arr :pointer)
+  (header :pointer)
+  (new-cn :int)
+  (new-rows :int 0))
+
 (define-cfun ("cvRepeat" repeat) :void
   (src :pointer)
   (dst :pointer))
+
+(define-cfun ("cvCreateData" create-data) :void
+  (arr :pointer))
+
+(define-cfun ("cvReleaseData" release-data) :void
+  (arr :pointer))
+
+(define-cfun ("cvSetData" set-data) :void
+  (arr :pointer)
+  (data :pointer)
+  (step :int))
+
+(define-cfun ("cvGetRawData" get-raw-data) :void
+  (arr :pointer)
+  (data :pointer)
+  (step :pointer (cffi:null-pointer))
+  (roi-size :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvGetSize" get-size) (:struct size)
   (arr :pointer))
@@ -161,6 +386,14 @@
   (src3 :pointer)
   (dst :pointer))
 
+(define-cfun ("cvMixChannels" mix-channels) :void
+  (src :pointer)
+  (src-ount :int)
+  (dst :pointer)
+  (dst-count :int)
+  (from-to :pointer)
+  (pair-count :int))
+
 (define-cfun ("cvConvertScale" convert-scale) :void
   (src :pointer)
   (dst :pointer)
@@ -182,6 +415,7 @@
   (scale :double 1)
   (shift :double 0))
 
+;;(define-cfun ("cvCheckTermCriteria" check-term-criteria) :)
 
 ;; ****************************************************************************************\
 ;;                   Arithmetic, logic and comparison operations                          *
@@ -229,6 +463,11 @@
   (dst :pointer)
   (scale :double 1))
 
+(define-cfun ("cvScaleAdd" scale-add) :void
+  (src1 :pointer)
+  (scalar (:struct scalar))
+  (src2 :pointer)
+  (dst :pointer))
 
 (define-cfun ("cvAddWeighted" add-weighted) :void
   (src :pointer)
@@ -359,7 +598,49 @@
   (y :pointer)
   (angle-in-degrees :int 0))
 
+(define-cfun ("cvPow" pow) :void
+  (src :pointer)
+  (dst :pointer)
+  (power :double))
 
+(define-cfun ("cvExp" exp) :void
+  (src :pointer)
+  (dst :pointer))
+
+(define-cfun ("cvLog" log) :void
+  (src :pointer)
+  (dst :pointer))
+
+(define-cfun ("cvFastArctan" fast-arctan) :float
+  (y :float)
+  (x :float))
+
+(define-cfun ("cvCbrt" cbrt) :float
+  (value :float))
+
+(define-cfun ("cvCheckArr" check-arr) :int
+  (arr :pointer)
+  (flags :int 0)
+  (min-val :double 0)
+  (max-val :double 0))
+
+(define-cfun ("cvRandArr" rand-arr) :void
+  (rng :pointer)
+  (arr :pointer)
+  (dist-type :int)
+  (param1 (:struct scalar))
+  (param2 (:struct scalar)))
+
+(define-cfun ("cvRandShuffle" rand-shuffle) :void
+  (mat :pointer)
+  (rng :pointer)
+  (iter-factor :double 1.0))
+
+(define-cfun ("cvSort" sort) :void
+  (src :pointer)
+  (dst :pointer (cffi:null-pointer))
+  (idxmat :pointer (cffi:null-pointer))
+  (flags :int 0)) 
 
 ;; ****************************************************************************************\
 ;;                                Matrix operations                                       *
@@ -389,6 +670,13 @@
   (src :pointer)
   (dst :pointer)
   (mat :pointer))
+
+(define-cfun ("cvMulTransposed" mul-transposed) :void
+  (src :pointer)
+  (dst :pointer)
+  (order :int)
+  (delta :pointer (cffi:null-pointer))
+  (scale :double 1.0d0))
 
 (define-cfun ("cvTranspose" transpose) :void
   (src :pointer)

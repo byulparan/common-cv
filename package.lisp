@@ -1,7 +1,7 @@
 (defpackage #:opencv
   (:nicknames :cv)
   (:use #:cl)
-  (:shadow #:abs #:and #:max #:merge #:min #:not #:or #:reduce #:set #:trace #:round #:load #:type)
+  (:shadow #:abs #:and #:max #:merge #:min #:not #:or #:pow #:exp #:log #:sort #:reduce #:set #:trace #:round #:load #:type)
   (:export ;; cv-types
    #:point
    #:point-x
@@ -37,6 +37,9 @@
 
    #:release-image
    #:release-mat
+   #:release-mat-nd
+   #:release-sparse-mat
+   
    #:release-mem-storage
    #:release-structuring-element
    #:release-hist
