@@ -5,9 +5,10 @@
   (x :int)
   (y :int))
 
-(defstruct (point
-	    (:constructor point (x y)))
-  x y)
+(defstruct point x y)
+(defun point (x y)
+  (make-point :x (floor x)
+	      :y (floor y)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvPoint))
   (cffi:with-foreign-slots ((x y) p (:struct Point))
@@ -24,9 +25,10 @@
   (x :float)
   (y :float))
 
-(defstruct (point2d-32f
-	    (:constructor point2d-32f (x y)))
-  x y)
+(defstruct point2d-32f x y)
+(defun point2d-32f (x y)
+  (make-point2d-32f :x (coerce x 'single-float)
+		    :y (coerce y 'single-float)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvPoint2D32f))
   (cffi:with-foreign-slots ((x y) p (:struct Point2D-32f))
@@ -34,8 +36,8 @@
 
 (defmethod cffi:translate-into-foreign-memory (point (type %CvPoint2D32f) p)
   (cffi:with-foreign-slots ((x y) p (:struct Point2D-32f))
-    (setf x (point2d-32f-x point)
-	  y (point2d-32f-y point))))
+    (setf x (coerce (point2d-32f-x point) 'single-float)
+	  y (coerce (point2d-32f-y point) 'single-float))))
 
 
 ;;; CvPoint2D64f
@@ -43,9 +45,10 @@
   (x :double)
   (y :double))
 
-(defstruct (point2d-64f
-	    (:constructor point2d-64f (x y)))
-  x y)
+(defstruct point2d-64f x y)
+(defun point2d-64f (x y)
+  (make-point2d-64f :x (coerce x 'double-float)
+		    :y (coerce y 'double-float)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvPoint2D64f))
   (cffi:with-foreign-slots ((x y) p (:struct Point2D-64f))
@@ -62,9 +65,10 @@
   (width :int)
   (height :int))
 
-(defstruct (size
-	    (:constructor size (width height)))
-  width height)
+(defstruct size width height)
+(defun size (width height)
+  (make-size :width (floor width)
+	     :height (floor height)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvSize))
   (cffi:with-foreign-slots ((width height) p (:struct Size))
@@ -81,9 +85,10 @@
   (width :float)
   (height :float))
 
-(defstruct (size2d-32f
-	    (:constructor size2d-32f (width height)))
-  width height)
+(defstruct size2d-32f width height)
+(defun size2d-32f (width height)
+  (make-size2d-32f :width (coerce width 'single-float)
+		   :height (coerce height 'single-float)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvSize2D32f))
   (cffi:with-foreign-slots ((width height) p (:struct Size2D-32f))
@@ -101,9 +106,11 @@
   (size (:struct  Size2D-32f))
   (angle :float))
 
-(defstruct (box2d
-	    (:constructor box2d (center size angle)))
-  center size angle)
+(defstruct box2d center size angle)
+(defun box2d (center size angle)
+  (make-box2d :center center
+	      :size size
+	      :angle (coerce angle 'single-float)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvBox2D))
   (cffi:with-foreign-slots ((center size angle) p (:struct Box2D))
@@ -122,9 +129,12 @@
   (width :int)
   (height :int))
 
-(defstruct (rect
-	    (:constructor rect (x y width height)))
-  x y width height)
+(defstruct rect x y width height)
+(defun rect (x y width height)
+  (make-rect :x (floor x)
+	      :y (floor y)
+	      :width (floor width)
+	      :height (floor height)))
 
 
 (defmethod cffi:translate-from-foreign (p (type %CvRect))
@@ -142,9 +152,15 @@
 (cffi:defcstruct (Scalar :class %CvScalar)
   (val :double :count 4))
 
-(defstruct (scalar
-	    (:constructor scalar (d0 d1 d2 d3)))
+(defstruct scalar
   d0 d1 d2 d3)
+
+(defun scalar (d0 &optional (d1 0.0) (d2 0.0) (d3 0.0))
+  (make-scalar :d0 (coerce d0 'double-float)
+	       :d1 (coerce d1 'double-float)
+	       :d2 (coerce d2 'double-float)
+	       :d3 (coerce d3 'double-float)))
+
 
 (defmethod cffi:translate-from-foreign (p (type %CvScalar))
   (cffi:with-foreign-slots ((val) p (:struct Scalar))
@@ -263,9 +279,10 @@
   (start-index :int)
   (end-index :int))
 
-(defstruct (slice
-	    (:constructor slice (start-index end-index)))
-  start-index end-index)
+(defstruct slice start-index end-index)
+(defun slice (start-index end-index)
+  (make-slice :start-index (floor start-index)
+	      :end-index (floor end-index)))
 
 (defmethod cffi:translate-from-foreign (p (type %CvSlice))
   (cffi:with-foreign-slots ((start-index end-index) p (:struct Slice))
