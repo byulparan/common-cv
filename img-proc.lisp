@@ -73,7 +73,7 @@
   (dst :pointer)
   (map-matrix :pointer)
   (flags :int (+ +inter-linear+ +warp-fill-outliers+))
-  (fillval (:struct scalar)))
+  (fillval (:struct scalar) (scalar-all 0)))
 
 (cffi:defcfun ("cvGetAffineTransform" %get-affine-transform) :void
   (src :pointer)
@@ -99,7 +99,7 @@
   (dst :pointer)
   (map-matrix :pointer)
   (flags :int (+ +inter-linear+ +warp-fill-outliers+))
-  (fillval (:struct scalar)))
+  (fillval (:struct scalar) (cv:scalar-all 0)))
 
 (cffi:defcfun ("cvGetPerspectiveTransform" %get-perspective-transform) :void
   (src :pointer)
@@ -460,7 +460,7 @@
 				 (mask-size 3)
 				 mask
 				 labels
-				 (labels-type :cv-dist-label-ccomp))
+				 (labels-type cv:+dist-label-ccomp+))
   (cffi:with-foreign-object (mask-ptr :float (length mask))
     (dotimes (i (length mask))
       (setf (cffi:mem-aref mask-ptr :float i) (coerce (nth i mask) 'single-float)))
