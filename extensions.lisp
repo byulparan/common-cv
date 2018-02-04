@@ -14,7 +14,7 @@
     (rect x y width height)))
 
 
-(defmacro with-named-window ((name &optional (options :cv-window-autosize)) &body body)
+(defmacro with-named-window ((name &optional (options cv:+window-autosize+)) &body body)
   `(unwind-protect (progn
 		     (cv:named-window ,name ,options)
 		     ,@body)
@@ -23,8 +23,8 @@
 
 (defmacro with-captured-camera ((capture &key (idx 0) (width 640) (height 480)) &body body)
   `(let* ((,capture (cv:create-camera-capture ,idx)))
-     (cv:set-capture-property ,capture :cv-cap-prop-frame-width (coerce ,width 'double-float))
-     (cv:set-capture-property ,capture :cv-cap-prop-frame-height (coerce ,height 'double-float))
+     (cv:set-capture-property ,capture cv:+cap-prop-frame-width+ (coerce ,width 'double-float))
+     (cv:set-capture-property ,capture cv:+cap-prop-frame-height+ (coerce ,height 'double-float))
      (unwind-protect (progn ,@body)
        (cv:release-capture ,capture))))
 

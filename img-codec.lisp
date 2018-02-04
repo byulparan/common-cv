@@ -3,12 +3,12 @@
 (define-cfun ("cvConvertImage" convert-image) :void
   (src :pointer)
   (dst :pointer)
-  (flags :convert-image-enum))
+  (flags :int 0))
 
 (define-cfun ("cvLoadImage" load-image) :pointer
   (file :string)
-  (iscolor :ipl-load-image-enum))
+  (iscolor :int +load-image-color+))
 
 (define-cfun ("cvLoadImageM" load-image-m) :pointer
   (filename :string)
-  (iscolor :ipl-load-image-enum))
+  (iscolor :int +load-image-color+))

@@ -11,7 +11,7 @@
 
 (define-cfun ("cvRetrieveFrame" retrieve-frame) :pointer
   (capture :pointer)
-  (stream-idx :int))
+  (stream-idx :int 0))
 
 (define-cfun ("cvQueryFrame" query-frame) :pointer
   (capture :pointer))
@@ -26,11 +26,11 @@
 
 (define-cfun ("cvGetCaptureProperty" get-capture-property) :double
   (capture :pointer)
-  (property-id :cap-prop-enum))
+  (property-id :int))
 
 (define-cfun ("cvSetCaptureProperty" set-capture-property) :int
   (capture :pointer)
-  (property-id :cap-prop-enum)
+  (property-id :int)
   (value :double))
 
 

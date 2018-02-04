@@ -3,15 +3,14 @@
 ;; ****************************************************************************************\
 ;;          Array allocation, deallocation, initialization and access to elements         *
 ;; ***************************************************************************************/
-
 (define-cfun ("cvCreateImageHeader" create-image-header) :pointer
   (size (:struct size))
-  (depth :ipl-depth-enum)
+  (depth :int)
   (channels :int))
 
 (define-cfun ("cvCreateImage" create-image) :pointer
   (size (:struct size))
-  (depth :ipl-depth-enum)
+  (depth :int)
   (channels :int))
 
 (cffi:defcfun ("cvReleaseImage" %release-image) :void
@@ -45,7 +44,7 @@
 (define-cfun ("cvCreateMat" create-mat) (:pointer (:struct mat))
   (rows :int)
   (cols :int)
-  (type :mat-type-enum))
+  (type :int))
 
 (cffi:defcfun ("cvReleaseMat" %release-mat) :void
   (ptr :pointer))
@@ -70,7 +69,7 @@
   (submat :pointer)
   (start-row :int)
   (end-row :int)
-  (delta-row :int))
+  (delta-row :int 1))
 
 (defun get-col (arr submat col)
   (get-cols arr submat col (+ col 1)))
@@ -84,11 +83,11 @@
 (define-cfun ("cvGetDiag" get-diag) :pointer
   (arr :pointer)
   (submat :pointer)
-  (diag :int))
+  (diag :int 0))
 
 (define-cfun ("cvGetDims" get-dims) :int
   (arr :pointer)
-  (sizes :pointer))
+  (sizes :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvGetDimSize" get-dim-size) :int
   (arr :pointer)
@@ -138,12 +137,12 @@
 (define-cfun ("cvCopy" copy) :void
   (src :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSet" set) :void
   (src :pointer)
   (value (:struct scalar))
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSetZero" set-zero) :void
   (arr :pointer))
@@ -165,8 +164,8 @@
 (define-cfun ("cvConvertScale" convert-scale) :void
   (src :pointer)
   (dst :pointer)
-  (scale :double)
-  (shift :double))
+  (scale :double 1)
+  (shift :double 0))
 
 (defun scale (src dst &optional (scale 1.0d0) (shift 0.0d0))
   (convert-scale src dst scale shift))
@@ -180,8 +179,8 @@
 (define-cfun ("cvConvertScaleAbs" convert-scale-abs) :void
   (src :pointer)
   (dst :pointer)
-  (scale :double)
-  (shift :double))
+  (scale :double 1)
+  (shift :double 0))
 
 
 ;; ****************************************************************************************\
@@ -192,43 +191,43 @@
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvAddS" add-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSub" sub) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSubS" sub-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSubRS" sub-r-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvMul" mul) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (scale :double))
+  (scale :double 1))
 
 (define-cfun ("cvDiv" div) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (scale :double))
+  (scale :double 1))
 
 
 (define-cfun ("cvAddWeighted" add-weighted) :void
@@ -248,37 +247,37 @@
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvAndS" and-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvOr" or) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvOrS" or-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvXor" xor) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvXorS" xor-s) :void
   (src :pointer)
   (value (:struct scalar))
   (dst :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvNot" not) :void
   (src :pointer)
@@ -300,13 +299,13 @@
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (cmp-op :cmp-enum))
+  (cmp-op :int))
 
 (define-cfun ("cvCmpS" cmp-s) :void
   (src :pointer)
   (value :double)
   (dst :pointer)
-  (cmp-op :cmp-enum))
+  (cmp-op :int))
 
 (define-cfun ("cvMin" min) :void
   (src1 :pointer)
@@ -350,15 +349,15 @@
   (x :pointer)
   (y :pointer)
   (magintude :pointer)
-  (angle :pointer)
-  (angle-in-degrees :int))
+  (angle :pointer (cffi:null-pointer))
+  (angle-in-degrees :int 0))
 
 (define-cfun ("cvPolarToCart" polar-to-cart) :void
   (magnitude :pointer)
   (angle :pointer)
   (x :pointer)
   (y :pointer)
-  (angle-in-degrees :int))
+  (angle-in-degrees :int 0))
 
 
 
@@ -378,13 +377,13 @@
   (src3 :pointer)
   (beta :double)
   (dst :pointer)
-  (t-abc :int))
+  (t-abc :int 0))
 
 (define-cfun ("cvTransform" transform) :void
   (src :pointer)
   (dst :pointer)
   (trans-mat :pointer)
-  (shift-vec :pointer))
+  (shift-vec :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvPerspectiveTransform" perspective-transform) :void
   (src :pointer)
@@ -397,15 +396,15 @@
 
 (define-cfun ("cvFlip" flip) :void
   (src :pointer)
-  (dst :pointer)
-  (flip-mode :int))
+  (dst :pointer (cffi:null-pointer))
+  (flip-mode :int 0))
 
 (define-cfun ("cvSVD" svd) :void
   (a :pointer)
   (w :pointer)
-  (u :pointer)
-  (v :pointer)
-  (flags :svd-enum))
+  (u :pointer (cffi:null-pointer))
+  (v :pointer (cffi:null-pointer))
+  (flags :int 0))
 
 (define-cfun ("cvSVBkSb" svbksb) :void
   (w :pointer)
@@ -413,21 +412,21 @@
   (v :pointer)
   (b :pointer)
   (x :pointer)
-  (flags :svd-enum))
+  (flags :int))
 
 (define-cfun ("cvInvert" invert) :double
   (src :pointer)
   (dst :pointer)
-  (method :invert-enum))
+  (method :int +lu+))
 
-(defun inv (src dst &optional (method :cv-lu))
+(defun inv (src dst &optional (method +lu+))
   (invert src dst method))
 
 (define-cfun ("cvSolve" solve) :int
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (method :int))
+  (method :int +lu+))
 
 (define-cfun ("cvDet" det) :double
   (mat :pointer))
@@ -439,13 +438,13 @@
   (mat :pointer)
   (evects :pointer)
   (evals :pointer)
-  (eps :double)
-  (low-index :int)
-  (high-index :int))
+  (eps :double 0)
+  (low-index :int -1)
+  (high-index :int -1))
 
 (define-cfun ("cvSetIdentity" set-identity) :void
   (mat :pointer)
-  (value (:struct scalar)))
+  (value (:struct scalar) (real-scalar 1.0d0)))
 
 
 (define-cfun ("cvCalcCovarMatrix" calc-covar-matrix) :void
@@ -453,7 +452,7 @@
   (count :int)
   (cov-mat :pointer)
   (avg :pointer)
-  (flags :covar-matrix-enum))
+  (flags :int))
 
 
 ;; ****************************************************************************************\
@@ -468,41 +467,41 @@
 
 (define-cfun ("cvAvg" avg) (:struct scalar)
   (arr :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvAvgSdv" avg-sdv) :void
   (arr :pointer)
   (mean :pointer)
   (std-dev :pointer)
-  (mask :pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvMinMaxLoc" min-max-loc) :void
   (arr :pointer)
   (min-val :pointer)
   (max-val :pointer)
-  (min-loc :pointer)
-  (max-loc :pointer)
-  (mask :pointer))
+  (min-loc :pointer (cffi:null-pointer))
+  (max-loc :pointer (cffi:null-pointer))
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvNorm" norm) :double
   (arr1 :pointer)
-  (arr2 :pointer)
-  (norm-type :norm-enum)
-  (mask :pointer))
+  (arr2 :pointer (cffi:null-pointer))
+  (norm-type :int +l2+)
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvNormalize" normalize) :void
   (src1 :pointer)
   (dst :pointer)
-  (a :double)
-  (b :double)
-  (norm-type :norm-enum)
-  (mask :pointer))
+  (a :double 1.0d0)
+  (b :double 0.0d0)
+  (norm-type :int +l2+)
+  (mask :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvReduce" reduce) :void
   (src :pointer)
   (dst :pointer)
-  (dim :int)
-  (op :reduce-enum))
+  (dim :int -1)
+  (op :int +reduce-sum+))
 
 ;; ****************************************************************************************\
 ;;                      Discrete Linear Transforms and Related Functions                  *
@@ -511,14 +510,14 @@
 (define-cfun ("cvDFT" dft) :void
   (src :pointer)
   (dst :pointer)
-  (flags :dxt-enum)
-  (nonzero-rows :int))
+  (flags :int)
+  (nonzero-rows :int 0))
 
 (define-cfun ("cvMulSpectrums" mul-spectrums) :void
   (src1 :pointer)
   (src2 :pointer)
   (dst :pointer)
-  (flags :dxt-enum))
+  (flags :int))
 
 (define-cfun ("cvGetOptimalDFTSize" get-optimal-dft-size) :int
   (size0 :int))
@@ -526,8 +525,7 @@
 (define-cfun ("cvDCT" dct) :void
   (src :pointer)
   (dst :pointer)
-  (flags :dxt-enum))
-
+  (flags :int))
 
 ;;**************************************************************************************
 ;;                              Dynamic data structures                                 
@@ -535,7 +533,7 @@
 
 ;;; CvMemStorage
 (define-cfun ("cvCreateMemStorage" create-mem-storage) :pointer
-  (block-size :int))
+  (block-size :int 0))
 
 (cffi:defcfun ("cvReleaseMemStorage" %release-mem-storage) :void
   (ptr :pointer))
@@ -554,45 +552,45 @@
   (elem-size :unsigned-long)
   (storage :pointer))
 
-(define-cfun ("cvClearSeq" clear-seq) :void
-  (seq :pointer))
-
 (define-cfun ("cvSeqPush" seq-push) :pointer
   (seq :pointer)
-  (element :pointer))
+  (element :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSeqPushFront" seq-push-front) :pointer
   (seq :pointer)
-  (element :pointer))
+  (element :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSeqPop" seq-pop) :void
   (seq :pointer)
-  (element :pointer))
+  (element :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSeqPopFront" seq-pop-front) :void
   (seq :pointer)
-  (element :pointer))
+  (element :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSeqPushMulti" seq-push-multi) :void
   (seq :pointer)
   (elements :pointer)
   (count :int)
-  (in-front :int))
+  (in-front :int 0))
 
 (define-cfun ("cvSeqPopMulti" seq-pop-multi) :void
   (seq :pointer)
   (elements :pointer)
   (count :int)
-  (in-front :int))
+  (in-front :int 0))
 
 (define-cfun ("cvSeqInsert" seq-insert) :pointer
   (seq :pointer)
   (before-index :int)
-  (element :pointer))
+  (element :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvSeqRemove" seq-remove) :void
   (seq :pointer)
   (index :int))
+
+(define-cfun ("cvClearSeq" clear-seq) :void
+  (seq :pointer))
 
 (define-cfun ("cvGetSeqElem" get-seq-elem) :pointer
   (seq :pointer)
@@ -601,7 +599,7 @@
 (define-cfun ("cvSeqElemIdx" seq-elem-idx) :int
   (seq :pointer)
   (element :pointer)
-  (block :pointer))
+  (block :pointer (cffi:null-pointer)))
 
 (define-cfun ("cvStartWriteSeq" start-write-seq) :void
   (seq-flags :int)
@@ -623,7 +621,7 @@
 (define-cfun ("cvStartReadSeq" start-read-seq) :pointer
   (seq :pointer)
   (seq-reader :pointer)
-  (reverse :int))
+  (reverse :int 0))
 
 (define-cfun ("cvGetSeqReaderPos" get-seq-reader-pos) :int
   (seq-reader :pointer))
@@ -631,13 +629,13 @@
 (define-cfun ("cvSetSeqReaderPos" set-seq-reader-pos) :void
   (seq-reader :pointer)
   (index :int)
-  (is-relative :int))
+  (is-relative :int 0))
 
 (define-cfun ("cvSeqSlice" seq-slice) :pointer
   (seq :pointer)
   (slice (:struct slice))
-  (storage :pointer)
-  (copy-data :int))
+  (storage :pointer (cffi:null-pointer))
+  (copy-data :int 0))
 
 (define-cfun ("cvSeqRemoveSlice" seq-remove-slice) :void
   (seq :pointer)
@@ -652,15 +650,13 @@
   (seq :pointer))
 
 
-
 ;; ****************************************************************************************\
 ;;                                    Data Persistence                                    *
 ;; ****************************************************************************************/
 
 (define-cfun ("cvLoad" load) :pointer
   (filename :string)
-  (memstorage :pointer)
-  (name :string)
-  (real-name :string))
-
+  (memstorage :pointer (cffi:null-pointer))
+  (name :string (cffi:null-pointer))
+  (real-name :string (cffi:null-pointer)))
 
