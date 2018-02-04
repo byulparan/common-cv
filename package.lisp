@@ -49,6 +49,11 @@
    #:get-perspective-transform
    #:find-contours
    #:find-next-contour
+
+   #:x
+   #:y
+   #:width
+   #:height
    #:mat-data
    #:get-total
    #:get-seq-elem-rect
