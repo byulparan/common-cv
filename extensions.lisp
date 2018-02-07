@@ -134,18 +134,18 @@
 	      collect `(cv:release-image ,(car img))))))
 
 
-(defmacro with-init-font ((font-var scale &optional (font-face cv:+font-hershey-plain+)
-				    (shear 0) (thickness 1) (line-type 16))
+(defmacro with-init-font ((font-var &key (font-face cv:+font-hershey-plain+)
+				      (scale 1) (shear 0) (thickness 1) (line-type 16))
 			  &body body)
-  `(cffi:with-foreign-object ((,font-var '(:struct font)))
+  `(cffi:with-foreign-objects ((,font-var '(:struct font)))
      (cffi:with-foreign-slots ((font-face hscale vscale shear thickness line-type) ,font-var
 			       (:struct font))
        (setf font-face ,font-face
-	     hscale ,scale
-	     vscale ,scale
-	     shear ,shear
-	     thickness ,thickness
-	     line-type ,line-type))
+	     hscale (coerce ,scale 'single-float)
+	     vscale (coerce ,scale 'single-float)
+	     shear (coerce ,shear 'single-float)
+	     thickness (floor ,thickness)
+	     line-type (floor ,line-type)))
      ,@body))
 
 
