@@ -132,3 +132,20 @@
      (unwind-protect (progn ,@body)
        ,@(loop for img in images
 	      collect `(cv:release-image ,(car img))))))
+
+
+(defmacro with-init-font ((font-var scale &optional (font-face cv:+font-hershey-plain+)
+				    (shear 0) (thickness 1) (line-type 16))
+			  &body body)
+  `(cffi:with-foreign-object ((,font-var '(:struct font)))
+     (cffi:with-foreign-slots ((font-face hscale vscale shear thickness line-type) ,font-var
+			       (:struct font))
+       (setf font-face ,font-face
+	     hscale ,scale
+	     vscale ,scale
+	     shear ,shear
+	     thickness ,thickness
+	     line-type ,line-type))
+     ,@body))
+
+

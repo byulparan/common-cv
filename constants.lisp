@@ -35,6 +35,8 @@
 (define-export-constant +cvtimg-flip+ 1)
 (define-export-constant +cvtimg-swap-rb+ 2)
 
+
+;;; font
 (define-export-constant +font-hershey-simplex+ 0)
 (define-export-constant +font-hershey-plain+ 1)
 (define-export-constant +font-hershey-duplex+ 2)
@@ -142,6 +144,10 @@
 (define-export-constant +chain-approx-tc89-kcos+ 4)
 (define-export-constant +link-runs+ 5)
 
+;;; cvTermCriteria
+(define-export-constant +termcrit-iter+ 1)
+(define-export-constant +termcrit-number+ +termcrit-iter+)
+(define-export-constant +termcrit-eps+ 2)
 
 ;;; filter
 (define-export-constant +covar-scrambled+ 0)

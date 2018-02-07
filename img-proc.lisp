@@ -1,5 +1,28 @@
 (in-package #:cv)
 
+(define-cfun ("cvAcc" acc) :void
+  (image :pointer)
+  (sum :pointer)
+  (mask :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvSquareAcc" squre-acc) :void
+  (image :pointer)
+  (sqsum :pointer)
+  (mask :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvMultiplyAcc" multiply-acc) :void
+  (image1 :pointer)
+  (image2 :pointer)
+  (acc :pointer)
+  (mask :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvRunningAvg" running-avg) :void
+  (image :pointer)
+  (acc :pointer)
+  (alpha :double)
+  (mask :pointer (cffi:null-pointer)))
+
+
 ;; ****************************************************************************************\
 ;;                                    Image Processing                                    *
 ;; ***************************************************************************************/
@@ -41,6 +64,30 @@
   (src :pointer)
   (dst :pointer)
   (filter :int +gaussian-5x5+))
+
+(define-cfun ("cvCreatePyramid" create-pyramid) :pointer
+  (img :pointer)
+  (extra-layers :int)
+  (rate :double)
+  (layer-sizes :pointer (cffi:null-pointer))
+  (bufarr :pointer (cffi:null-pointer))
+  (calc :int 1)
+  (filter :int cv:+gaussian-5x5+))
+
+(define-cfun ("cvReleasePyramid" release-pyramid) :void
+  (pyramid :pointer)
+  (extra-layers :int))
+
+(define-cfun ("cvPyrMeanShiftFiltering" pyr-mean-shift-filtering) :void
+  (src :pointer)
+  (dst :pointer)
+  (sp :double)
+  (sr :double)
+  (max-level :int 1)
+  (termcrit (:struct term-criteria) (term-criteria (+ cv:+termcrit-iter+
+						      cv:+termcrit-eps+) 
+						   5 1)))
+
 
 (define-cfun ("cvWatershed" watershed) :void
   (image :pointer)
@@ -123,12 +170,58 @@
   (flags :int (+ +inter-linear+ +warp-fill-outliers+))
   (fillval (:struct scalar) (scalar-all 0)))
 
+(define-cfun ("cvConvertMaps" convert-maps) :void
+  (mapx :pointer)
+  (mapy :pointer)
+  (mapxy :pointer)
+  (mapalpha :pointer))
+
 (define-cfun ("cvLogPolar" log-polar) :void
   (src :pointer)
   (dst :pointer)
   (center (:struct point2d-32f))
   (m :double)
   (flags :int (+ +inter-linear+ +warp-fill-outliers+)))
+
+(define-cfun ("cvLinearPolar" linear-polar) :void
+  (src :pointer)
+  (dst :pointer)
+  (center (:struct point2d-32f))
+  (max-radius :double)
+  (flags :int (+ cv:+inter-linear+
+		 cv:+warp-fill-outliers+)))
+
+(define-cfun ("cvUndistort2" undistort2) :void
+  (src :pointer)
+  (dst :pointer)
+  (camera-matrix :pointer)
+  (distortion-coeffs :pointer)
+  (new-camera-matrix :pointer (cffi:null-pointer)))
+
+(define-cfun ("cvInitUndistortMap" init-undistort-map) :void
+  (camera-matrix :pointer)
+  (distortion-coeffs :pointer)
+  (mapx :pointer)
+  (mapy :pointer))
+
+(define-cfun ("cvInitUndistortRectifyMap" init-undistort-rectify-map) :void
+  (camera-matrix :pointer)
+  (dist-coeffs :pointer)
+  (r :pointer)
+  (new-camera-matrix :pointer)
+  (mapx :pointer)
+  (mapy :pointer))
+
+(define-cfun ("cvUndistortPoints" undistort-points) :void
+  (src :pointer)
+  (dst :pointer)
+  (camera-matrix :pointer)
+  (dist-coeffs :pointer)
+  (r :pointer (cffi:null-pointer))
+  (p :pointer (cffi:null-pointer)))
+
+
+
 
 (define-cfun ("cvCreateStructuringElementEx" create-structuring-element-ex)
     (:pointer (:struct ipl-conv-kernel))
@@ -186,6 +279,24 @@
   (moment :pointer)
   (x-order :int)
   (y-order :int))
+
+(define-cfun ("cvGetHuMoments" get-hu-moments) :void
+  (moments :pointer)
+  (hu-moments :pointer))
+
+;; *********************************** data sampling **************************************/
+(define-cfun ("cvSampleLine" sample-line) :int
+  (image :pointer)
+  (pt1 (:struct point))
+  (pt2 (:struct point))
+  (buffer :pointer)
+  (connectivity :int 8))
+
+(define-cfun ("cvGetRectSubPix" get-rect-sub-pix) :void
+  (src :pointer)
+  (dst :pointer)
+  (center (:struct point2d-32f)))
+
 
 (define-cfun ("cvGetQuadrangleSubPix" get-quadrangle-sub-pix) :void
   (src :pointer)
@@ -341,6 +452,12 @@
   (box (:struct box2d))
   (pt (:struct point2d-32f) :count 4))
 
+(define-cfun ("cvPointSeqFromMat" point-seq-from-mat) :pointer
+  (seq-kind :int)
+  (mat :pointer)
+  (contour-header :pointer)
+  (block :pointer))
+
 (define-cfun ("cvPointPolygonTest" point-polygon-test) :double
   (contour :pointer)
   (pt (:struct point2d-32f))
@@ -373,6 +490,22 @@
 	(dotimes (i (length ranges))
 	  (cffi-sys:foreign-free (cffi:mem-aref ranges-pointer :pointer i)))))
     ref))
+
+;;; @need ranges to list ------------------------------------------------------
+(cffi:defcfun ("cvSetHistBinRanges" %set-hist-bin-ranges) :void
+  (hist :pointer)
+  (ranges :pointer)
+  (uniform :int))
+
+(cffi:defcfun ("cvMakeHistHeaderForArray" make-hist-header-for-array) :pointer
+  (dims :int)
+  (sizes :int)
+  (hist :pointer)
+  (data :pointer)
+  (ranges :pointer)
+  (uniform :int))
+;;; ---------------------------------------------------------------------------
+
 
 (cffi:defcfun ("cvReleaseHist" %release-hist) :void
   (ptr :pointer))
@@ -420,6 +553,11 @@
   (src :pointer)
   (dst :pointer))
 
+(define-cfun ("cvCalcBayesianProb" calc-bayesian-prob) :void
+  (src :pointer)
+  (number :int)
+  (dst :pointer))
+
 ;;; @renaming 
 (define-cfun ("cvCalcArrHist" calc-hist) :void
   (images :pointer)
@@ -440,6 +578,12 @@
   (hist :pointer)
   (method :int)
   (factor :double))
+
+(define-cfun ("cvCalcProbDensity" calc-prob-density) :void
+  (hist1 :pointer)
+  (hist2 :pointer)
+  (dst-hist :pointer)
+  (scale :double 255))
 
 (define-cfun ("cvEqualizeHist" equalize-hist) :void
   (src :pointer)
@@ -506,6 +650,82 @@
   (threshold2 :double)
   (aperture-size :int 3))
 
+(define-cfun ("cvPreCornerDetect" pre-corner-detect) :void
+  (image :pointer)
+  (corners :pointer)
+  (aperture-size :int 3))
+
+(define-cfun ("cvCornerEigenValsAndVecs" corner-eigen-vals-and-vecs) :void
+  (image :pointer)
+  (eigenvv :pointer)
+  (block-size :int)
+  (aperture-size :int 3))
+
+(define-cfun ("cvCornerMinEigenVal" corenr-min-eigen-val) :void
+  (image :pointer)
+  (eigenval :pointer)
+  (block-size :int)
+  (aperture-size :int 3))
+
+(define-cfun ("cvCornerHarris" corner-harris) :void
+  (image :pointer)
+  (harris-response :pointer)
+  (block-size :int)
+  (aperture-size :int 3)
+  (k :double .04))
+
+(define-cfun ("cvFindCornerSubPix" find-corner-sub-pix) :void
+  (image :pointer)
+  (corners :pointer)
+  (count :int)
+  (win (:struct size))
+  (zero-zone (:struct size))
+  (criteria (:struct term-criteria)))
+
+(define-cfun ("cvGoodFeaturesToTrack" good-features-to-track) :void
+  (image :pointer)
+  (eig-image :pointer)
+  (temp-image :pointer)
+  (corners :pointer)
+  (corner-count :pointer)
+  (quality-level :double)
+  (min-distance :double)
+  (mask :pointer (cffi:null-pointer))
+  (block-size :int 3)
+  (user-harris :int 0)
+  (k :double .04))
+
+(define-cfun ("cvHoughLines2" hough-lines2) :pointer
+  (image :pointer)
+  (line-storage :pointer)
+  (method :int)
+  (rho :double)
+  (theta :double)
+  (threshold :int)
+  (param1 :double 0.0)
+  (param2 :double 0.0)
+  (min-theta :double 0.0)
+  (max-theta :double  pi))
+
+(define-cfun ("cvHoughCircles" hough-circles) :pointer
+  (image :pointer)
+  (circle-storage :pointer)
+  (method :int)
+  (dp :double)
+  (min-dist :double)
+  (param1 :double 100.0)
+  (param2 :double 100.0)
+  (min-radius :int 0)
+  (max-radius :int 0))
+
+(define-cfun ("cvFitLine" fit-line) :void
+  (points :pointer)
+  (dist-type :int)
+  (param :double)
+  (reps :double)
+  (aeps :double)
+  (line :pointer))
+
 ;; ****************************************************************************************\
 ;;                                     Drawing                                            *
 ;; ****************************************************************************************/
@@ -527,6 +747,15 @@
   (thickness :int 1)
   (line-type :int 8)
   (shift :int 0))
+
+(define-cfun ("cvRectangleR" rectangle-r) :void
+  (img :pointer)
+  (r (:struct rect))
+  (color (:struct scalar))
+  (thickness :int 1)
+  (line-type :int 8)
+  (shift :int 0))
+
 
 (define-cfun ("cvCircle" circle) :void
   (img :pointer)
@@ -585,6 +814,12 @@
   (line-type :int 8)
   (shift :int 0))
 
+(define-cfun ("cvClipLine" clip-line) :int
+  (image-size (:struct size))
+  (pt1 :pointer)
+  (pt2 :pointer))
+
+;;; cvInitLineIterator
 (cffi:defcstruct font
   (name-font :string)
   (color (:struct scalar))
@@ -599,12 +834,40 @@
   (dx :float)
   (line-type :int))
 
+(define-cfun ("cvInitFont" init-font) :void
+  (font :pointer)
+  (font-face :int)
+  (hscale :double)
+  (vscale :double)
+  (shear :double 0.0)
+  (thickness :int 1)
+  (line-type :int 8))
+
 (define-cfun ("cvPutText" put-text) :void
   (img :pointer)
   (text :string)
   (org (:struct point))
   (font :pointer)
   (color (:struct scalar)))
+
+(define-cfun ("cvGetTextSize" get-text-size) :void
+  (text-string :string)
+  (font :pointer)
+  (text-size :pointer)
+  (baseline :pointer))
+
+(define-cfun ("cvColorToScalar" color-to-scalar) (:struct scalar)
+  (packed-color :double)
+  (arrtype :int))
+
+(define-cfun ("cvEllipse2Poly" ellipse-2-poly) :int
+  (center (:struct point))
+  (axes (:struct size))
+  (angle :int)
+  (arc-start :int)
+  (arc-end :int)
+  (pts :pointer)
+  (delta :int))
 
 
 (define-cfun ("cvDrawContours" draw-contours) :void

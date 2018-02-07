@@ -294,3 +294,29 @@
 	  end-index (slice-end-index slice))))
 
 
+;;; cvTermCriteria
+(cffi:defcstruct (term-criteria :class %CvTermCriteria)
+  (type :int)
+  (max-iter :int)
+  (epsilon :double))
+
+(defstruct term-criteria
+  type max-iter epsilon)
+
+(defun term-criteria (type max-iter epsilon)
+  (make-term-criteria :type (floor type)
+		      :max-iter (floor max-iter)
+		      :epsilon (coerce epsilon 'double-float)))
+
+
+(defmethod cffi:translate-from-foreign (p (type %CvTermCriteria))
+  (cffi:with-foreign-slots ((type max-iter epsilon) p (:struct term-criteria))
+    (term-criteria type max-iter epsilon)))
+
+(defmethod cffi:translate-into-foreign-memory (term-criteria (type %CvTermCriteria) p)
+  (cffi:with-foreign-slots ((type max-iter epsilon) p (:struct term-criteria))
+    (setf type (term-criteria-type term-criteria)
+	  max-iter (term-criteria-max-iter term-criteria)
+	  epsilon (term-criteria-epsilon term-criteria))))
+
+

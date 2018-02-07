@@ -34,7 +34,11 @@
    #:slice
    #:slice-start-index
    #:slice-end-index
-
+   #:term-criteria
+   #:term-criteria-type
+   #:term-criteria-max-iter
+   #:term-criteria-epsilon
+   
    #:release-image
    #:release-mat
    #:release-mat-nd
@@ -62,4 +66,5 @@
    #:get-seq-elem-rect
    #:with-named-window
    #:with-captured-camera
-   #:with-ipl-images))
+   #:with-ipl-images
+   #:with-init-font))
