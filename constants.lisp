@@ -16,6 +16,10 @@
 (define-export-constant +event-l-button-dbl-clk+ 7)
 (define-export-constant +event-r-button-dbl-clk+ 8)
 (define-export-constant +event-m-button-dbl-clk+ 9)
+(define-export-constant +event-mousewheel+ 10)
+(define-export-constant +event-mouse-h-wheel+ 11)
+
+
 (define-export-constant +event-flag-l-button+ 1)
 (define-export-constant +event-flag-r-button+ 2)
 (define-export-constant +event-flag-m-button+ 4)
