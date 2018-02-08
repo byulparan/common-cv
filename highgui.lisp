@@ -1,5 +1,13 @@
 (in-package #:cv)
 
+(define-cfun ("cvAddText" add-text) :void
+  (img :pointer)
+  (text :string)
+  (org (:struct point))
+  (font :pointer))
+
+(define-cfun ("cvStartWindowThread" start-window-thread) :int)
+
 (define-cfun ("cvNamedWindow" named-window) :void
   (name :string)
   (flags :int +window-autosize+))
@@ -54,8 +62,6 @@
   (userdata :pointer))
 
 
-
-
 (cffi:defcfun ("cvSetMouseCallback" %set-mouse-callback) :void
   (window-name :string)
   (on-mouse :pointer)
@@ -63,11 +69,3 @@
 
 (define-cfun ("cvWaitKey" wait-key) :int
   (delay :int))
-
-(define-cfun ("cvSetMouseCallback" set-mouse-callback) :void
-  (name :string)
-  (callback :pointer)
-  (param :pointer (cffi:null-pointer)))
-
-
-;;; @videoio

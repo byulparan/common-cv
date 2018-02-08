@@ -69,4 +69,5 @@
    #:with-ipl-images
    #:with-init-font
 
-   #:create-trackbar))
+   #:create-trackbar
+   #:set-mouse-callback))

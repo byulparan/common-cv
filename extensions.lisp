@@ -149,22 +149,45 @@
      ,@body))
 
 
-(defvar *trackbar-callback-table* (make-hash-table))
+(defvar *highgui-callback-table* (make-hash-table))
 
 (cffi:defcallback trackbar-callback2 :void ((pos :int)
 					    (userdata :pointer))
   (let* ((id (cffi:pointer-address userdata))
-	 (handle (gethash id *trackbar-callback-table*)))
+	 (handle (gethash id *highgui-callback-table*)))
     (when handle
       (funcall handle pos))))
 
-
 (let* ((id 0))
   (defun create-trackbar (trackbar-name window-name init-value count callback)
-    (setf (gethash id *trackbar-callback-table*) callback)
+    (setf (gethash id *highgui-callback-table*) callback)
     (cffi:with-foreign-objects ((init :int))
       (setf (cffi:mem-ref init :int) (floor init-value))
       (%create-trackbar2 trackbar-name window-name init count (cffi:callback trackbar-callback2) (cffi:make-pointer id)))
+    (incf id)
+    (values)))
+
+(cffi:defcallback mouse-callback :void ((event :int)
+					(x :int)
+					(y :int)
+					(flags :int)
+					(param :pointer))
+  (let* ((id (cffi:pointer-address param))
+	 (handle (gethash id *highgui-callback-table*)))
+    (when handle
+      (funcall handle event x y flags))))
+
+(let* ((id 0))
+  (defun create-trackbar (trackbar-name window-name init-value count callback)
+    (setf (gethash id *highgui-callback-table*) callback)
+    (cffi:with-foreign-objects ((init :int))
+      (setf (cffi:mem-ref init :int) (floor init-value))
+      (%create-trackbar2 trackbar-name window-name init count (cffi:callback trackbar-callback2) (cffi:make-pointer id)))
+    (incf id)
+    (values))
+  (defun set-mouse-callback (window-name callback)
+    (setf (gethash id *highgui-callback-table*) callback)
+    (%set-mouse-callback window-name (cffi:callback mouse-callback) (cffi:make-pointer id))
     (incf id)
     (values)))
 
