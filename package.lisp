@@ -56,7 +56,7 @@
    #:get-perspective-transform
    #:find-contours
    #:find-next-contour
-
+   
    #:x
    #:y
    #:width
@@ -67,4 +67,6 @@
    #:with-named-window
    #:with-captured-camera
    #:with-ipl-images
-   #:with-init-font))
+   #:with-init-font
+
+   #:create-trackbar))

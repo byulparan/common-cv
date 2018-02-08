@@ -149,3 +149,24 @@
      ,@body))
 
 
+(defvar *trackbar-callback-table* (make-hash-table))
+
+(cffi:defcallback trackbar-callback2 :void ((pos :int)
+					    (userdata :pointer))
+  (let* ((id (cffi:pointer-address userdata))
+	 (handle (gethash id *trackbar-callback-table*)))
+    (when handle
+      (funcall handle pos))))
+
+
+(let* ((id 0))
+  (defun create-trackbar (trackbar-name window-name init-value count callback)
+    (setf (gethash id *trackbar-callback-table*) callback)
+    (cffi:with-foreign-objects ((init :int))
+      (setf (cffi:mem-ref init :int) (floor init-value))
+      (%create-trackbar2 trackbar-name window-name init count (cffi:callback trackbar-callback2) (cffi:make-pointer id)))
+    (incf id)
+    (values)))
+
+
+
