@@ -104,6 +104,27 @@
   (cffi:with-foreign-slots ((data) mat (:struct mat))
     data))
 
+(defun ipl-data (ipl)
+  (cffi:with-foreign-slots ((image-data) ipl (:struct ipl-image))
+    image-data))
+
+
+(defun ipl-width (ipl)
+  (cffi:with-foreign-slots ((width) ipl (:struct ipl-image))
+    width))
+
+(defun ipl-width-step (ipl)
+  (cffi:with-foreign-slots ((width-step) ipl (:struct ipl-image))
+    width-step))
+
+(defun ipl-height (ipl)
+  (cffi:with-foreign-slots ((height) ipl (:struct ipl-image))
+    height))
+
+(defun ipl-data-origin (ipl)
+  (cffi:with-foreign-slots ((image-data-origin) ipl (:struct ipl-image))
+    image-data-origin))
+
 (defun get-total (seq)
   (cffi:with-foreign-slots ((total) seq (:struct seq))
     total))

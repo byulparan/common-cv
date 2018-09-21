@@ -187,40 +187,47 @@
 ;;; 
 ;;; CvMat
 (cffi:defcstruct mat
-  (height :int)
-  (width :int)
-  (data :pointer)
-  (hdr_refcount :int)
-  (refcount :pointer)
+  (type :int)
   (step :int)
-  (type :int))
+  (refcount :pointer)
+  (hdr-refcount :int)
+  (data :pointer)
+  (height :int)
+  (width :int))
 
 
 ;;; IplImage
 (cffi:defcstruct ipl-image
-  (align :int)
-  (alpha-channel :int)
-  (border-const :int :count 4)
-  (border-mode :int :count 4)
-  (channel-seq :char :count 4)
-  (color-model :char :count 4)
-  (data-order :int)
-  (depth :int)
-  (height :int)
-  (id :int)
-  (image-data :pointer)
-  (image-data-origin :pointer)
-  (image-id :pointer)
-  (image-size :int)
-  (mask-roi :pointer)
-  (n-channels :int)
   (n-size :int)
-  (origin :int)
-  (roi :pointer)
-  (tile-info :pointer)
-  (width :int)
-  (width-step :int))
+  (id :int)
+  (n-channels :int)
+  (alpha-channel :int)
+  (depth :int)
 
+  (color-model :char :count 4)
+  (channel-seq :char :count 4)
+  (data-order :int)
+
+  (origin :int)
+
+  (align :int)
+
+  (width :int)
+  (height :int)
+
+  (roi :pointer)
+  (mask-roi :pointer)
+
+  (image-id :pointer)
+  (tile-info :pointer)
+
+  (image-size :int)
+
+  (image-data :pointer)
+  (width-step :int)
+  (border-mode :int :count 4)
+  (border-const :int :count 4)
+  (image-data-origin :pointer))
 
 
 ;; 

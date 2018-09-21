@@ -62,6 +62,12 @@
    #:width
    #:height
    #:mat-data
+   #:ipl-data
+   #:ipl-data-origin
+   #:ipl-width
+   #:ipl-width-step
+   #:ipl-height
+
    #:get-total
    #:get-seq-elem-rect
    #:with-named-window
